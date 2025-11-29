@@ -1,0 +1,115 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Continue/Copilot
+.continue/
+
+# Temporary files
+*.tmp
+*.log
+*.pid
+build.log
+server-startup.log
+*.tmp.*
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Cache
+.pip-cache/
+.pip-tmp/
+.pip_cache/
+pip-cache/
+.cache/
+.packages-cache/
+xtts-server/.cache/
+xtts-server/__pycache__/
+*.cache
+
+# Node/npm (se houver)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# OS
+Thumbs.db
+.AppleDouble
+.LSOverride
+*.swp
+*.swo
+
+# Project specific
+test_monitor.txt
+mensagens.txt
+run-debug.bat
+
+# Releases (manter apenas no local)
+Releases/
+*.7z
+*.zip (respeitar releases oficiais)
+
+# Voice data (local only)
+xtts-server/voices/custom/*
+!xtts-server/voices/custom/.gitkeep
+xtts-server/voices/embeddings/*
+!xtts-server/voices/embeddings/.gitkeep
+
+# Config local
+config/
+*.config.json
+config.local.json
+
+# Model cache (pode ser muito grande)
+models/
+*.pt
+*.pth
+*.ckpt
+
+# Temporary synthesis output
+*.wav (temporary files)
+temp/
+tmp/
+
+# venv Scripts
+venv/Scripts/
+venv/Lib/

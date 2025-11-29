@@ -1,0 +1,111 @@
+name: Bug Report
+description: Reportar um bug/problema
+labels: ["bug"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por reportar um bug! Por favor, preencha os detalhes abaixo.
+        
+  - type: textarea
+    id: description
+    attributes:
+      label: Descrição do Bug
+      description: Descreva o problema de forma clara e concisa
+      placeholder: O que está acontecendo de errado?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Como Reproduzir
+      description: Passos para reproduzir o comportamento
+      placeholder: |
+        1. Vá para '...'
+        2. Clique em '....'
+        3. Veja o erro '....'
+      value: |
+        1. 
+        2. 
+        3. 
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportamento Esperado
+      description: Descreva o que deveria acontecer
+      placeholder: O que você espera que aconteça?
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Se aplicável, adicione screenshots ou logs
+      placeholder: Cole aqui ou arraste imagens
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs/Errors
+      description: Saída de erro ou logs relevantes
+      render: shell
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Sistema Operacional
+      options:
+        - Windows 10
+        - Windows 11
+        - Ubuntu 22.04
+        - Ubuntu 20.04
+        - macOS 12
+        - macOS 13
+        - Outro
+    validations:
+      required: true
+
+  - type: dropdown
+    id: python
+    attributes:
+      label: Versão Python
+      options:
+        - "3.11"
+        - "3.12"
+        - Outro
+    validations:
+      required: true
+
+  - type: input
+    id: gpu
+    attributes:
+      label: GPU/CUDA Info
+      description: "Ex: RTX 3060, CUDA 11.8"
+      placeholder: RTX 3060, CUDA 11.8
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Ambiente Adicional
+      description: Qualquer informação adicional relevante
+      placeholder: |
+        - pip version: x.x.x
+        - torch version: 2.0.1
+        - etc
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: Verifiquei se há issues similares abertas
+          required: true
+        - label: Incluí todas as informações relevantes
+          required: true

@@ -1,0 +1,39 @@
+* text=auto
+* eol=lf
+
+# Python
+*.py text eol=lf
+*.pyx text eol=lf
+*.pxd text eol=lf
+*.pxs text eol=lf
+*.pxitext eol=lf
+
+# Shell
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Batch
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.exe binary
+
+# JSON
+*.json text eol=lf
+*.jsonc text eol=lf
+
+# Markdown
+*.md text eol=lf
+*.MD text eol=lf
+
+# Binary
+*.wav binary
+*.mp3 binary
+*.pkl binary
+*.npy binary
+*.pt binary
+*.pth binary
+*.ckpt binary
+*.7z binary
+*.zip binary
+*.gz binary
+*.tar binary

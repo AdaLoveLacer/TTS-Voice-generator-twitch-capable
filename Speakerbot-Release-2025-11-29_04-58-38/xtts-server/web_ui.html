@@ -1,0 +1,3343 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <meta name="description" content="XTTS v2 Text-to-Speech Local Web Application">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Speakerbot">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23000' width='192' height='192'/><text x='50%' y='50%' font-size='100' font-weight='bold' fill='%23fff' text-anchor='middle' dominant-baseline='middle'>🎙️</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23000' width='192' height='192'/><text x='50%' y='50%' font-size='100' font-weight='bold' fill='%23fff' text-anchor='middle' dominant-baseline='middle'>🎙️</text></svg>">
+    <title>XTTS v2 Server - Síntese de Voz com Clonagem</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #1a1625 0%, #241d34 100%);
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(102, 126, 234, 0.2);
+            overflow: hidden;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.5);
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.3);
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+            background: rgba(0, 0, 0, 0.3);
+            overflow-x: auto;
+            flex-wrap: wrap;
+        }
+        
+        .tab-button {
+            flex: 1;
+            min-width: 120px;
+            padding: 15px 20px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            color: #a0a0a0;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab-button:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+        
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            box-shadow: 0 -2px 10px rgba(102, 126, 234, 0.3);
+        }
+        
+        .tab-content {
+            padding: 30px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #e0e0e0;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        input[type="file"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 5px;
+            font-size: 1em;
+            font-family: inherit;
+            background: rgba(30, 20, 50, 0.8);
+            color: #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        input[type="file"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(30, 20, 50, 1);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2), inset 0 0 10px rgba(102, 126, 234, 0.1);
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .button-secondary {
+            background: linear-gradient(135deg, #555 0%, #333 100%);
+        }
+        
+        .button-secondary:hover {
+            box-shadow: 0 8px 25px rgba(80, 80, 80, 0.5);
+        }
+        
+        .button-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+        
+        .button-danger:hover {
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.5);
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            border-left: 4px solid;
+        }
+        
+        .status.show {
+            display: block;
+        }
+        
+        .status.success {
+            background: rgba(46, 139, 87, 0.2);
+            color: #4ade80;
+            border-left-color: #4ade80;
+        }
+        
+        .status.error {
+            background: rgba(220, 38, 38, 0.2);
+            color: #f87171;
+            border-left-color: #f87171;
+        }
+        
+        .status.info {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border-left-color: #60a5fa;
+        }
+        
+        .status.loading {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border-left-color: #fbbf24;
+        }
+        
+        .voice-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .voice-card {
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(30, 20, 50, 0.8), rgba(40, 30, 70, 0.8));
+            transition: all 0.3s ease;
+        }
+        
+        .voice-card:hover {
+            box-shadow: 0 5px 25px rgba(102, 126, 234, 0.3);
+            transform: translateY(-2px);
+            border-color: rgba(102, 126, 234, 0.6);
+        }
+        
+        .voice-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .voice-card p {
+            color: #a0a0a0;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+        
+        .voice-card .badge {
+            display: inline-block;
+            background: rgba(102, 126, 234, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            margin-right: 5px;
+        }
+        
+        /* Synthesis Configuration Panel */
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .config-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .config-item label {
+            margin-bottom: 0;
+            font-weight: 600;
+            color: #e0e0e0;
+            font-size: 0.95em;
+        }
+        
+        .config-item input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(to right, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        .config-item input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: 2px solid rgba(102, 126, 234, 0.5);
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+            transition: all 0.2s ease;
+        }
+        
+        .config-item input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.6);
+        }
+        
+        .config-item input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: 2px solid rgba(102, 126, 234, 0.5);
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+            transition: all 0.2s ease;
+        }
+        
+        .config-item input[type="range"]::-moz-range-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.6);
+        }
+        
+        .config-item small {
+            color: #707080;
+            font-size: 0.85em;
+        }
+        
+        .config-item span {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .voice-card .badge.preset {
+            background: rgba(74, 222, 128, 0.7);
+        }
+        
+        .voice-card .actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        
+        .voice-card button {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 0.9em;
+        }
+        
+        .stats {
+            background: rgba(30, 20, 50, 0.6);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #a0a0a0;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .audio-player {
+            background: rgba(30, 20, 50, 0.6);
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+        
+        audio {
+            width: 100%;
+            margin-top: 10px;
+            filter: brightness(1.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        audio:hover {
+            filter: brightness(1.4);
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+        
+        audio:active {
+            filter: brightness(1.3);
+        }
+        
+        .info-box {
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #60a5fa;
+        }
+        
+        .audio-card {
+            border: 1px solid rgba(102, 126, 234, 0.3) !important;
+            border-radius: 8px;
+            padding: 12px;
+            background: rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .audio-card:hover {
+            border-color: rgba(102, 126, 234, 0.6);
+            background: rgba(102, 126, 234, 0.15);
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+        }
+        
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .row {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .tab-button {
+                min-width: 100px;
+                padding: 12px 15px;
+                font-size: 0.9em;
+            }
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.2);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .code-block {
+            background: rgba(0, 0, 0, 0.5);
+            color: #4ade80;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin: 10px 0;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+            color: #e0e0e0;
+        }
+        
+        table tr:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        #waveform-canvas {
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            image-rendering: pixelated;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .recording-pulse {
+            animation: pulse 0.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Configuration Status Indicator -->
+        <div id="config-status-indicator" style="background: rgba(46, 139, 87, 0.2); padding: 10px 15px; border-radius: 5px; margin-bottom: 10px; display: none; border-left: 4px solid #4ade80; color: #4ade80;">
+            <strong>💾 Configurações Salvas:</strong>
+            <span id="config-saved-time" style="margin-left: 10px; color: #a0a0a0;"></span>
+            <button onclick="clearAllConfigs()" style="float: right; background: none; border: none; color: #f87171; cursor: pointer; font-size: 14px; text-decoration: underline;">Limpar</button>
+        </div>
+        
+        <div class="container">
+        <div class="header">
+            <h1>🎙️ XTTS v2 Server</h1>
+            <p>Síntese de Voz Multilíngue com Clonagem</p>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('dashboard')">Dashboard</button>
+            <button class="tab-button" onclick="switchTab('synthesize')">Síntese</button>
+            <button class="tab-button" onclick="switchTab('voice-clone')">Clonar Voz</button>
+            <button class="tab-button" onclick="switchTab('record-voice')">🎙️ Gravar Voz</button>
+            <button class="tab-button" onclick="switchTab('voices')">Minhas Vozes</button>
+            <button class="tab-button" onclick="switchTab('config')">Configuração</button>
+            <button class="tab-button" onclick="switchTab('about')">Sobre</button>
+        </div>
+        
+        <!-- DASHBOARD TAB -->
+        <div id="dashboard" class="tab-content active">
+            <h2>Dashboard</h2>
+            
+            <div class="info-box">
+                ✅ Servidor XTTS v2 está ativo em <strong>http://127.0.0.1:8877</strong>
+            </div>
+            
+            <div class="section">
+                <h2>Status do Servidor</h2>
+                <div id="server-status" class="stats">
+                    <p>Carregando status...</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Vozes Disponíveis</h2>
+                <div id="dashboard-voices" class="stats">
+                    <p>Carregando vozes...</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Cache de Embeddings</h2>
+                <div id="cache-stats" class="stats">
+                    <p>Carregando informações de cache...</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>🎥 OBS Audio Streaming</h2>
+                <div style="background: rgba(30, 20, 50, 0.6); padding: 20px; border-radius: 8px; border: 1px solid rgba(102, 126, 234, 0.2);">
+                    <div style="margin-bottom: 15px;">
+                        <p style="color: #a0a0a0; margin-bottom: 10px;">URL para adicionar no OBS Studio:</p>
+                        <div style="background: rgba(0, 0, 0, 0.4); padding: 12px; border-radius: 5px; border: 1px solid rgba(102, 126, 234, 0.3); word-break: break-all;">
+                            <code style="color: #667eea; font-weight: bold;" id="obs-url">http://localhost:8877/obs-audio</code>
+                        </div>
+                        <button onclick="copyToClipboard('obs-url')" style="margin-top: 8px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9em;">
+                            📋 Copiar URL
+                        </button>
+                    </div>
+                    
+                    <div style="background: rgba(102, 126, 234, 0.1); padding: 15px; border-radius: 5px; border-left: 3px solid #667eea;">
+                        <p style="color: #e0e0e0; margin-bottom: 10px;"><strong>Como configurar no OBS:</strong></p>
+                        <ol style="color: #a0a0a0; margin-left: 20px; line-height: 1.8;">
+                            <li>Clique em <strong>Sources → +</strong></li>
+                            <li>Selecione <strong>Browser</strong></li>
+                            <li>Cole a URL acima</li>
+                            <li>Configure: <strong>Width: 1, Height: 1</strong></li>
+                            <li>✅ Pronto! O áudio será transmitido automaticamente</li>
+                        </ol>
+                    </div>
+                    
+                    <div style="margin-top: 15px;">
+                        <p style="color: #a0a0a0; margin-bottom: 10px;">Conexões OBS ativas:</p>
+                        <div style="font-size: 1.8em; color: #667eea; font-weight: bold;" id="obs-connections">0</div>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="refreshDashboard()" style="margin-top: 20px;">🔄 Atualizar</button>
+        </div>
+        
+        <!-- SYNTHESIZE TAB -->
+        <div id="synthesize" class="tab-content">
+            <h2>Síntese de Voz</h2>
+            
+            <div class="section">
+                <div class="info-box">
+                    Digite um texto e escolha uma voz para sintetizar fala.
+                </div>
+                
+                <form onsubmit="synthesize(event)">
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="tts-text">Texto a Sintetizar:</label>
+                            <textarea id="tts-text" placeholder="Digite o texto aqui..." required></textarea>
+                        </div>
+                        
+                        <div>
+                            <div class="form-group">
+                                <label for="tts-language">Idioma:</label>
+                                <select id="tts-language">
+                                    <option value="pt">Português (Brasil)</option>
+                                    <option value="en">English (USA)</option>
+                                    <option value="es">Español (España)</option>
+                                    <option value="fr">Français (France)</option>
+                                    <option value="de">Deutsch (Deutschland)</option>
+                                    <option value="it">Italiano (Italia)</option>
+                                    <option value="pl">Polski (Polska)</option>
+                                    <option value="tr">Türkçe (Türkiye)</option>
+                                    <option value="ru">Русский (Россия)</option>
+                                    <option value="nl">Nederlands (Nederland)</option>
+                                    <option value="cs">Čeština (Česko)</option>
+                                    <option value="ar">العربية (السعودية)</option>
+                                    <option value="zh-cn">中文 (中国)</option>
+                                    <option value="ja">日本語 (日本)</option>
+                                    <option value="hu">Magyar (Magyarország)</option>
+                                    <option value="ko">한국어 (대한민국)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="tts-voice">Voz:</label>
+                                <select id="tts-voice"></select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- SYNTHESIS CONFIGURATION PANEL -->
+                    <div class="section" style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <h3 style="margin-top: 0; color: #333;">⚙️ Configurações de Síntese</h3>
+                        
+                        <div class="config-item" style="margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 15px;">
+                            <label for="tts-preset">
+                                📋 Carregar Preset:
+                            </label>
+                            <select id="tts-preset" onchange="loadSynthesisPreset()">
+                                <option value="">-- Personalizado --</option>
+                                <option value="natural">Natural e Equilibrado</option>
+                                <option value="slow_and_clear">Lento e Claro</option>
+                                <option value="fast_and_energetic">Rápido e Energético</option>
+                                <option value="robotic">Robótico</option>
+                                <option value="expressive">Expressivo</option>
+                                <option value="whisper">Sussurro</option>
+                                <option value="dramatic">Dramático</option>
+                                <optgroup label="Meus Presets" id="custom-presets-group"></optgroup>
+                            </select>
+                            <small>Selecione um preset para carregar configurações pré-definidas</small>
+                        </div>
+                        
+                        <!-- Save Custom Preset Section -->
+                        <div class="config-item" style="background: #f0f9ff; padding: 12px; border-radius: 5px; margin-bottom: 15px; border-left: 3px solid #0066cc;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: bold;">💾 Salvar Preset Personalizado:</label>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                <input type="text" id="custom-preset-name" placeholder="Ex: Meu Preset Favorito" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">
+                                <button type="button" onclick="saveCustomPreset()" class="button-primary" style="padding: 8px;">
+                                    💾 Salvar Preset
+                                </button>
+                            </div>
+                            <small style="display: block; margin-top: 5px;">Dê um nome e clique em "Salvar Preset" para guardar suas configurações atuais</small>
+                            <div id="custom-presets-list" style="margin-top: 10px; display: none; background: white; padding: 8px; border-radius: 4px;">
+                                <strong style="font-size: 12px;">Meus Presets:</strong>
+                                <div id="custom-presets-buttons" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="config-grid">
+                            <div class="config-item">
+                                <label for="tts-speed">
+                                    Velocidade: <span id="speed-value">1.0x</span>
+                                </label>
+                                <input type="range" id="tts-speed" min="0.5" max="2.0" step="0.1" value="1.0">
+                                <small>0.5x (mais lento) até 2.0x (mais rápido)</small>
+                            </div>
+                            
+                            <div class="config-item">
+                                <label for="tts-temperature">
+                                    Temperatura: <span id="temp-value">0.75</span>
+                                </label>
+                                <input type="range" id="tts-temperature" min="0.1" max="1.0" step="0.05" value="0.75">
+                                <small>Controla variação/naturalidade (0.1=robótico, 1.0=muito variado)</small>
+                            </div>
+                            
+                            <div class="config-item">
+                                <label for="tts-top-k">
+                                    Top-K: <span id="topk-value">50</span>
+                                </label>
+                                <input type="range" id="tts-top-k" min="0" max="100" step="5" value="50">
+                                <small>Diversidade de escolhas (0=determinístico, 100=máxima variação)</small>
+                            </div>
+                            
+                            <div class="config-item">
+                                <label for="tts-top-p">
+                                    Top-P: <span id="topp-value">0.85</span>
+                                </label>
+                                <input type="range" id="tts-top-p" min="0.0" max="1.0" step="0.05" value="0.85">
+                                <small>Probabilidade acumulada (0.85=apenas tokens com 85% prob acumulada)</small>
+                            </div>
+                            
+                            <div class="config-item">
+                                <label for="tts-length-scale">
+                                    Escala de Duração: <span id="lengthscale-value">1.0x</span>
+                                </label>
+                                <input type="range" id="tts-length-scale" min="0.5" max="2.0" step="0.1" value="1.0">
+                                <small>0.5x (mais curto) até 2.0x (mais longo)</small>
+                            </div>
+                            
+                            <div class="config-item">
+                                <label for="tts-gpt-cond-len">
+                                    Comprimento de Condicionamento GPT: <span id="gpt-cond-len-value">12s</span>
+                                </label>
+                                <input type="range" id="tts-gpt-cond-len" min="3" max="30" step="0.5" value="12">
+                                <small>3-30s (maior = melhor clonagem, usa mais memória) | Padrão: 12s</small>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                            <button type="button" onclick="resetSynthesisConfig()" class="button-secondary">
+                                🔄 Restaurar Padrões
+                            </button>
+                            <button type="button" onclick="clearAllConfigs()" class="button-secondary" style="background: #f39c12;">
+                                🗑️ Limpar Salvo
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- GPU OPTIMIZATION SETTINGS -->
+                    <div class="section" style="background: #f0f7ff; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #667eea;">
+                        <h3 style="margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            ⚡ Otimizações de GPU
+                            <span id="gpu-status-badge" style="font-size: 0.9em; padding: 2px 8px; background: #667eea; color: white; border-radius: 12px; margin-left: auto;">Carregando...</span>
+                        </h3>
+                        
+                        <div class="config-grid">
+                            <div class="config-item">
+                                <label for="gpu-memory-fraction">
+                                    Fração de Memória GPU: <span id="gpu-memory-value">80%</span>
+                                </label>
+                                <select id="gpu-memory-fraction" onchange="updateGPUSettings()">
+                                    <option value="0.5">50% (Mais Seguro)</option>
+                                    <option value="0.7">70% (Balanceado)</option>
+                                    <option value="0.8" selected>80% (Padrão)</option>
+                                    <option value="0.9">90% (Rápido)</option>
+                                    <option value="0.95">95% (Muito Rápido)</option>
+                                </select>
+                                <small>Maior = Mais rápido, mas maior risco de overflow</small>
+                            </div>
+                            
+                            <div class="config-item">
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" id="gpu-half-precision" checked onchange="updateGPUSettings()">
+                                    <span>Precisão Metade (FP16)</span>
+                                </label>
+                                <small>✅ 2-3x mais rápido (leve perda de qualidade)</small>
+                            </div>
+                            
+                            <div class="config-item">
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" id="gpu-batch-processing" onchange="updateGPUSettings()">
+                                    <span>Processamento em Lote</span>
+                                </label>
+                                <small>⚠️ Experimental - Paralela múltiplas sínteses</small>
+                            </div>
+                            
+                            <div class="config-item">
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" id="gpu-int8-quantization" onchange="updateGPUSettings()">
+                                    <span>Quantização INT8</span>
+                                </label>
+                                <small>⚠️ Experimental - 1.5-2x speedup (qualidade reduzida)</small>
+                            </div>
+                            
+                            <div class="config-item">
+                                <label style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" id="gpu-model-cache" checked onchange="updateGPUSettings()">
+                                    <span>Cache de Modelo</span>
+                                </label>
+                                <small>💾 Mantém modelo em memória (requests mais rápidos)</small>
+                            </div>
+                        </div>
+                        
+                        <div id="gpu-performance-estimate" style="background: white; padding: 12px; border-radius: 5px; margin-top: 12px; font-size: 0.95em;">
+                            <strong>Estimativa de Performance:</strong>
+                            <p style="margin: 5px 0; color: #666;">
+                                Latência Base: <span id="base-latency">1000ms</span> | 
+                                Speedup Estimado: <span id="speedup-estimate" style="color: #27ae60; font-weight: bold;">1.0x</span> | 
+                                Latência Estimada: <span id="estimated-latency" style="color: #27ae60; font-weight: bold;">1000ms</span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button type="submit">🎤 Sintetizar</button>
+                        <button type="reset" class="button-secondary">Limpar</button>
+                    </div>
+                </form>
+                
+                <div id="tts-status" class="status"></div>
+                
+                <div id="tts-output" class="audio-player" style="display: none;">
+                    <strong>Resultado:</strong>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <audio id="tts-audio" controls style="flex: 1; cursor: pointer;"></audio>
+                        <button id="tts-download" type="button" style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9em; white-space: nowrap;" onclick="downloadAudio('tts-audio', 'tts-synthese.wav')">📥 Download</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- FILE MONITOR SECTION -->
+            <div class="section">
+                <h2>📄 Monitor de Arquivo TXT (Síntese em Tempo Real)</h2>
+                
+                <div class="info-box">
+                    🔄 Monitore um arquivo TXT e sintetize automaticamente cada nova linha adicionada. Perfeito para streams de chat, logs em tempo real ou qualquer entrada dinâmica.
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <!-- Left Column: File Monitoring -->
+                    <div style="border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 8px; padding: 15px; background: rgba(102, 126, 234, 0.05);">
+                        <h3 style="margin-bottom: 15px; color: #667eea;">⚙️ Configuração de Monitoramento</h3>
+                        
+                        <div class="form-group">
+                            <label for="file-monitor-path">Caminho do Arquivo TXT:</label>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="text" id="file-monitor-path" placeholder="Ex: C:/chat.txt ou /home/user/logs.txt" value="" style="flex: 1;">
+                                <span id="file-monitor-path-saved" style="color: #4ade80; font-size: 1.2em; display: none;">💾</span>
+                            </div>
+                            <small>Cole o caminho do arquivo que deseja monitorar (será salvo automaticamente)</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="file-monitor-voice">Voz para Síntese:</label>
+                            <select id="file-monitor-voice">
+                                <option value="">-- Selecione uma voz --</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="file-monitor-language">Idioma:</label>
+                            <select id="file-monitor-language">
+                                <option value="pt">Português (Brasil)</option>
+                                <option value="en">English (USA)</option>
+                                <option value="es">Español (España)</option>
+                                <option value="fr">Français (France)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="file-monitor-random-voice">
+                                <span>🎲 Usar Voz Aleatória</span>
+                            </label>
+                            <small>Quando ativado, cada nova linha usará uma voz aleatória em vez da selecionada</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="file-monitor-interval">Intervalo de Verificação (ms):</label>
+                            <input type="number" id="file-monitor-interval" min="100" max="5000" value="500" step="100">
+                            <small>Tempo entre verificações de novas linhas (100-5000ms)</small>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="startFileMonitoring()" id="btn-start-monitor" style="flex: 1; background: #27ae60;">
+                                ▶️ Iniciar Monitor
+                            </button>
+                            <button onclick="stopFileMonitoring()" id="btn-stop-monitor" style="flex: 1; background: #e74c3c; display: none;">
+                                ⏹ Parar Monitor
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column: Status -->
+                    <div style="border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 8px; padding: 15px; background: rgba(102, 126, 234, 0.05);">
+                        <h3 style="margin-bottom: 15px; color: #667eea;">📊 Status do Monitor</h3>
+                        
+                        <div style="background: rgba(0, 0, 0, 0.2); padding: 12px; border-radius: 5px; margin-bottom: 15px;">
+                            <p style="margin: 5px 0;"><strong>Estado:</strong> <span id="monitor-status-text" style="color: #a0a0a0;">Parado</span></p>
+                            <p style="margin: 5px 0;"><strong>Arquivo:</strong> <span id="monitor-file-name" style="color: #667eea;">Não configurado</span></p>
+                            <p style="margin: 5px 0;"><strong>Linhas Processadas:</strong> <span id="monitor-lines-count" style="color: #4ade80;">0</span></p>
+                            <p style="margin: 5px 0;"><strong>Fila de Reprodução:</strong> <span id="queue-status" style="color: #fbbf24;">Fila: 0</span></p>
+                            <p style="margin: 5px 0;"><strong>Última Linha:</strong> <span id="monitor-last-line" style="color: #a0a0a0; word-break: break-all;">-</span></p>
+                        </div>
+                        
+                        <div style="background: rgba(0, 0, 0, 0.2); padding: 12px; border-radius: 5px;">
+                            <strong style="display: block; margin-bottom: 8px;">📜 Log de Atividades:</strong>
+                            <div id="monitor-log" style="background: rgba(0, 0, 0, 0.3); border-radius: 4px; padding: 8px; height: 150px; overflow-y: auto; font-size: 0.85em; font-family: monospace; color: #4ade80;">
+                                <div style="color: #a0a0a0;">Aguardando inicialização...</div>
+                            </div>
+                            <button onclick="clearMonitorLog()" style="margin-top: 8px; width: 100%; padding: 6px; font-size: 0.9em; background: #555;">
+                                🗑️ Limpar Log
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Synthesized Lines -->
+                <div style="border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 8px; padding: 15px; background: rgba(102, 126, 234, 0.05);">
+                    <h3 style="margin-bottom: 15px; color: #667eea;">🔊 Linhas Sintetizadas Recentemente</h3>
+                    <div id="monitor-audio-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">
+                        <div style="text-align: center; color: #a0a0a0; padding: 20px; grid-column: 1/-1;">
+                            Nenhuma síntese realizada ainda
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="file-monitor-status" class="status"></div>
+            </div>
+        </div>
+        
+        <!-- RECORD VOICE TAB -->
+        <div id="record-voice" class="tab-content">
+            <h2>Gravar Voz</h2>
+            
+            <div class="section">
+                <div class="info-box">
+                    🎙️ Grave sua voz usando o microfone do seu computador e crie uma voz personalizada.
+                </div>
+                
+                <div class="form-group">
+                    <label for="record-name">Nome da Voz:</label>
+                    <input type="text" id="record-name" placeholder="Ex: Minha Voz Gravada" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="record-language">Idioma:</label>
+                    <select id="record-language">
+                        <option value="pt">Português (Brasil)</option>
+                        <option value="en">English (USA)</option>
+                        <option value="es">Español (España)</option>
+                        <option value="fr">Français (France)</option>
+                        <option value="de">Deutsch</option>
+                        <option value="it">Italiano</option>
+                    </select>
+                </div>
+                
+                <!-- Recording Controls -->
+                <div class="section" style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                    <h3 style="margin-bottom: 15px;">🎙️ Controles de Gravação</h3>
+                    
+                    <div id="recording-info" style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                        <p style="margin: 5px 0;"><strong>Status:</strong> <span id="record-status">Pronto</span></p>
+                        <p style="margin: 5px 0;"><strong>Duração:</strong> <span id="record-duration">00:00</span></p>
+                        <p style="margin: 5px 0;"><strong>Nível de Som:</strong> <span id="record-level">█░░░░░░░░</span></p>
+                    </div>
+                    
+                    <!-- Waveform Canvas -->
+                    <canvas id="waveform-canvas" style="width: 100%; height: 150px; background: #1a1a1a; border-radius: 5px; margin-bottom: 15px; display: none;"></canvas>
+                    
+                    <div class="button-group" style="margin-bottom: 15px;">
+                        <button id="btn-start-recording" onclick="startRecording()" style="flex: 1; background: #27ae60;">
+                            ● Iniciar Gravação
+                        </button>
+                        <button id="btn-stop-recording" onclick="stopRecording()" style="flex: 1; background: #e74c3c; display: none;">
+                            ⏹ Parar Gravação
+                        </button>
+                        <button id="btn-pause-recording" onclick="pauseRecording()" style="flex: 1; background: #f39c12; display: none;">
+                            ⏸ Pausar
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Playback & Save -->
+                <div class="section" style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 20px; display: none;" id="playback-section">
+                    <h3 style="margin-bottom: 15px;">▶️ Reproduzir e Salvar</h3>
+                    
+                    <div class="audio-player">
+                        <audio id="recorded-audio" controls style="width: 100%;"></audio>
+                    </div>
+                    
+                    <div class="button-group" style="margin-top: 15px;">
+                        <button onclick="downloadRecording()" class="button-secondary">⬇️ Baixar WAV</button>
+                        <button onclick="discardRecording()" class="button-danger">🗑️ Descartar</button>
+                    </div>
+                </div>
+                
+                <!-- Upload Recorded Voice -->
+                <div class="section" style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 20px; display: none;" id="upload-section">
+                    <h3 style="margin-bottom: 15px;">📤 Salvar Voz Gravada</h3>
+                    
+                    <p style="margin-bottom: 15px; color: #666;">
+                        Sua gravação está pronta. Clique no botão abaixo para salvar como uma voz personalizada no servidor.
+                    </p>
+                    
+                    <div class="button-group">
+                        <button onclick="saveRecordedVoice()" style="flex: 1; background: #667eea;">
+                            ✅ Salvar Voz no Servidor
+                        </button>
+                    </div>
+                    
+                    <div id="save-voice-status" class="status"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- VOICE CLONE TAB -->
+        <div id="voice-clone" class="tab-content">
+            <h2>Clonar Voz</h2>
+            
+            <div class="section">
+                <div class="info-box">
+                    Faça upload de um arquivo de áudio (até 50MB) para clonar a voz e sintetizar novo áudio.
+                </div>
+                
+                <form onsubmit="cloneVoice(event)">
+                    <div class="form-group">
+                        <label for="clone-text">Texto a Sintetizar:</label>
+                        <textarea id="clone-text" placeholder="Digite o texto aqui..." required></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="clone-language">Idioma:</label>
+                            <select id="clone-language">
+                                <option value="pt">Português (Brasil)</option>
+                                <option value="en">English (USA)</option>
+                                <option value="es">Español (España)</option>
+                                <option value="fr">Français (France)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="clone-wav">Arquivo(s) de Áudio (WAV):</label>
+                            <input type="file" id="clone-wav" accept=".wav" multiple>
+                            <small>Selecione 1-5 arquivos WAV. Múltiplas referências melhoram a qualidade da clonagem!</small>
+                            <div id="clone-files-list" style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 5px; display: none;">
+                                <strong>Arquivos selecionados:</strong>
+                                <ul id="clone-files-preview" style="margin: 5px 0; padding-left: 20px;"></ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="section" style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                        <h3 style="margin-bottom: 15px;">⚙️ Configurações de Síntese</h3>
+                        <div class="config-grid">
+                            <div class="config-item">
+                                <label for="clone-speed">
+                                    Velocidade: <span id="clone-speed-value">1.0x</span>
+                                </label>
+                                <input type="range" id="clone-speed" min="0.5" max="2.0" step="0.1" value="1.0">
+                                <small>0.5x (mais lento) até 2.0x (mais rápido)</small>
+                            </div>
+                            
+                            <div class="config-item">
+                                <label for="clone-temperature">
+                                    Temperatura: <span id="clone-temp-value">0.75</span>
+                                </label>
+                                <input type="range" id="clone-temperature" min="0.1" max="1.0" step="0.05" value="0.75">
+                                <small>Controla variação/naturalidade (0.1=robótico, 1.0=muito variado)</small>
+                            </div>
+                            
+                            <div class="config-item">
+                                <label for="clone-top-k">
+                                    Top-K: <span id="clone-topk-value">50</span>
+                                </label>
+                                <input type="range" id="clone-top-k" min="0" max="100" step="5" value="50">
+                                <small>Diversidade de escolhas (0=determinístico, 100=máxima variação)</small>
+                            </div>
+                            
+                            <div class="config-item">
+                                <label for="clone-top-p">
+                                    Top-P: <span id="clone-topp-value">0.85</span>
+                                </label>
+                                <input type="range" id="clone-top-p" min="0.0" max="1.0" step="0.05" value="0.85">
+                                <small>Probabilidade acumulada (0.85=apenas tokens com 85% prob acumulada)</small>
+                            </div>
+                            
+                            <div class="config-item">
+                                <label for="clone-length-scale">
+                                    Escala de Duração: <span id="clone-lengthscale-value">1.0x</span>
+                                </label>
+                                <input type="range" id="clone-length-scale" min="0.5" max="2.0" step="0.1" value="1.0">
+                                <small>0.5x (mais curto) até 2.0x (mais longo)</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button type="submit">🎯 Clonar e Sintetizar</button>
+                        <button type="reset" class="button-secondary">Limpar</button>
+                    </div>
+                </form>
+                
+                <div id="clone-status" class="status"></div>
+                
+                <div id="clone-output" class="audio-player" style="display: none;">
+                    <strong>Resultado:</strong>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <audio id="clone-audio" controls style="flex: 1; cursor: pointer;"></audio>
+                        <button id="clone-download" type="button" style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9em; white-space: nowrap;" onclick="downloadAudio('clone-audio', 'clone-voz.wav')">📥 Download</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- VOICES TAB -->
+        <div id="voices" class="tab-content">
+            <h2>Minhas Vozes</h2>
+            
+            <div class="section">
+                <div class="info-box">
+                    Gerenciar suas vozes personalizadas. Você pode fazer upload de novos áudios para criar vozes customizadas.
+                </div>
+                
+                <form onsubmit="uploadVoice(event)">
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="upload-name">Nome da Voz:</label>
+                            <input type="text" id="upload-name" placeholder="Ex: Minha Voz" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="upload-language">Idioma:</label>
+                            <select id="upload-language">
+                                <option value="pt">Português (Brasil)</option>
+                                <option value="en">English (USA)</option>
+                                <option value="es">Español (España)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="upload-wav">Arquivo de Áudio (WAV, até 50MB):</label>
+                        <input type="file" id="upload-wav" accept=".wav" required>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button type="submit">📤 Upload da Voz</button>
+                        <button type="reset" class="button-secondary">Limpar</button>
+                    </div>
+                </form>
+                
+                <div id="upload-status" class="status"></div>
+            </div>
+            
+            <div class="section">
+                <h2>Vozes Registradas</h2>
+                <div id="voices-list" class="voice-list">
+                    <p>Carregando vozes...</p>
+                </div>
+                <button onclick="loadVoicesList()" style="margin-top: 20px;">🔄 Atualizar Lista</button>
+            </div>
+        </div>
+        
+        <!-- CONFIG TAB -->
+        <div id="config" class="tab-content">
+            <h2>Configuração</h2>
+            
+            <div class="section">
+                <h2>Limpar Cache</h2>
+                <p>Limpar os caches de memória e disco pode liberar espaço, mas deixará a síntese mais lenta.</p>
+                <div class="button-group" style="margin-top: 15px;">
+                    <button onclick="clearMemoryCache()" class="button-secondary">🗑️ Limpar Cache de Memória</button>
+                    <button onclick="clearDiskCache()" class="button-secondary">🗑️ Limpar Cache de Disco</button>
+                    <button onclick="clearAllCache()" class="button-danger">🗑️ Limpar Tudo</button>
+                </div>
+                <div id="cache-clear-status" class="status"></div>
+            </div>
+            
+            <div class="section">
+                <h2>Informações do Servidor</h2>
+                <div id="server-info" class="info-box" style="background: white; border: 1px solid #ddd;">
+                    <p>Carregando informações...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ABOUT TAB -->
+        <div id="about" class="tab-content">
+            <h2>Sobre XTTS v2</h2>
+            
+            <div class="section">
+                <h2>O que é XTTS v2?</h2>
+                <p>
+                    XTTS v2 é um modelo de Text-to-Speech (TTS) de última geração que suporta síntese de voz em mais de 15 idiomas. 
+                    Com suporte a clonagem de voz, você pode sintetizar fala usando vozes personalizadas.
+                </p>
+            </div>
+            
+            <div class="section">
+                <h2>Idiomas Suportados</h2>
+                <table>
+                    <tr>
+                        <th>Código</th>
+                        <th>Idioma</th>
+                    </tr>
+                    <tr>
+                        <td>pt</td>
+                        <td>Português (Brasil)</td>
+                    </tr>
+                    <tr>
+                        <td>en</td>
+                        <td>English (USA)</td>
+                    </tr>
+                    <tr>
+                        <td>es</td>
+                        <td>Español (España)</td>
+                    </tr>
+                    <tr>
+                        <td>fr</td>
+                        <td>Français (France)</td>
+                    </tr>
+                    <tr>
+                        <td>de</td>
+                        <td>Deutsch (Deutschland)</td>
+                    </tr>
+                    <tr>
+                        <td>it</td>
+                        <td>Italiano (Italia)</td>
+                    </tr>
+                    <tr>
+                        <td>pl</td>
+                        <td>Polski (Polska)</td>
+                    </tr>
+                    <tr>
+                        <td>tr</td>
+                        <td>Türkçe (Türkiye)</td>
+                    </tr>
+                    <tr>
+                        <td>ru</td>
+                        <td>Русский (Россия)</td>
+                    </tr>
+                    <tr>
+                        <td>nl</td>
+                        <td>Nederlands (Nederland)</td>
+                    </tr>
+                    <tr>
+                        <td>cs</td>
+                        <td>Čeština (Česko)</td>
+                    </tr>
+                    <tr>
+                        <td>ar</td>
+                        <td>العربية (السعودية)</td>
+                    </tr>
+                    <tr>
+                        <td>zh-cn</td>
+                        <td>中文 (中国)</td>
+                    </tr>
+                    <tr>
+                        <td>ja</td>
+                        <td>日本語 (日本)</td>
+                    </tr>
+                    <tr>
+                        <td>hu</td>
+                        <td>Magyar (Magyarország)</td>
+                    </tr>
+                    <tr>
+                        <td>ko</td>
+                        <td>한국어 (대한민국)</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="section">
+                <h2>Limitações</h2>
+                <ul>
+                    <li>Máximo de 1.000 caracteres por síntese</li>
+                    <li>Máximo de 50MB por arquivo de voz</li>
+                    <li>Máximo de 100 vozes customizadas</li>
+                    <li>Máximo de 100 textos por requisição em lote</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <h2>API Endpoints</h2>
+                <div class="code-block">
+POST /v1/synthesize
+  - Sintetizar texto com voz existente
+  - Parâmetros: text, language, voice
+
+POST /v1/clone-voice
+  - Clonar voz e sintetizar em uma etapa
+  - Parâmetros: text, language, speaker_wav
+
+POST /v1/voices/upload
+  - Upload de nova voz customizada
+  - Parâmetros: voice_name, wav_file, language
+
+GET /v1/voices
+  - Listar todas as vozes disponíveis
+
+DELETE /v1/voices/{voice_id}
+  - Deletar uma voz customizada
+
+GET /health
+  - Verificar status do servidor
+
+GET /v1/info
+  - Informações gerais do servidor
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://127.0.0.1:8877';
+        
+        // ====================================================================
+        // CONFIGURATION PERSISTENCE (LocalStorage)
+        // ====================================================================
+        
+        const CONFIG_STORAGE_KEY = 'speakerbot_synthesis_config';
+        const CLONE_CONFIG_STORAGE_KEY = 'speakerbot_clone_config';
+        
+        // Save configuration to localStorage
+        function saveConfig() {
+            const config = {
+                // Synthesis settings
+                speed: document.getElementById('tts-speed')?.value || '1.0',
+                temperature: document.getElementById('tts-temperature')?.value || '0.75',
+                top_k: document.getElementById('tts-top-k')?.value || '50',
+                top_p: document.getElementById('tts-top-p')?.value || '0.85',
+                length_scale: document.getElementById('tts-length-scale')?.value || '1.0',
+                gpt_cond_len: document.getElementById('tts-gpt-cond-len')?.value || '12',
+                language: document.getElementById('tts-language')?.value || 'pt',
+                voice: document.getElementById('tts-voice')?.value || 'en_1',
+                preset: document.getElementById('tts-preset')?.value || '',
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
+            updateConfigIndicator();
+            console.log('✅ Synthesis config saved to localStorage');
+        }
+        
+        // Update the config status indicator
+        function updateConfigIndicator() {
+            const saved = localStorage.getItem(CONFIG_STORAGE_KEY) || localStorage.getItem(CLONE_CONFIG_STORAGE_KEY);
+            const indicator = document.getElementById('config-status-indicator');
+            
+            if (saved) {
+                indicator.style.display = 'block';
+                try {
+                    const config = JSON.parse(saved);
+                    const timestamp = new Date(config.timestamp);
+                    const timeStr = timestamp.toLocaleTimeString('pt-BR');
+                    const dateStr = timestamp.toLocaleDateString('pt-BR');
+                    document.getElementById('config-saved-time').textContent = `${dateStr} às ${timeStr}`;
+                } catch (e) {
+                    document.getElementById('config-saved-time').textContent = 'Carregado do armazenamento';
+                }
+            } else {
+                indicator.style.display = 'none';
+            }
+        }
+        
+        // Load configuration from localStorage
+        function loadConfig() {
+            try {
+                const saved = localStorage.getItem(CONFIG_STORAGE_KEY);
+                if (!saved) return false;
+                
+                const config = JSON.parse(saved);
+                
+                // Restore synthesis settings
+                if (document.getElementById('tts-speed')) {
+                    document.getElementById('tts-speed').value = config.speed;
+                    document.getElementById('speed-value').textContent = parseFloat(config.speed).toFixed(1) + 'x';
+                }
+                if (document.getElementById('tts-temperature')) {
+                    document.getElementById('tts-temperature').value = config.temperature;
+                    document.getElementById('temp-value').textContent = parseFloat(config.temperature).toFixed(2);
+                }
+                if (document.getElementById('tts-top-k')) {
+                    document.getElementById('tts-top-k').value = config.top_k;
+                    document.getElementById('topk-value').textContent = config.top_k;
+                }
+                if (document.getElementById('tts-top-p')) {
+                    document.getElementById('tts-top-p').value = config.top_p;
+                    document.getElementById('topp-value').textContent = parseFloat(config.top_p).toFixed(2);
+                }
+                if (document.getElementById('tts-length-scale')) {
+                    document.getElementById('tts-length-scale').value = config.length_scale;
+                    document.getElementById('lengthscale-value').textContent = parseFloat(config.length_scale).toFixed(1) + 'x';
+                }
+                if (document.getElementById('tts-gpt-cond-len')) {
+                    document.getElementById('tts-gpt-cond-len').value = config.gpt_cond_len;
+                    document.getElementById('gpt-cond-len-value').textContent = parseFloat(config.gpt_cond_len).toFixed(1) + 's';
+                }
+                if (document.getElementById('tts-language')) {
+                    document.getElementById('tts-language').value = config.language;
+                }
+                if (document.getElementById('tts-voice')) {
+                    document.getElementById('tts-voice').value = config.voice;
+                }
+                
+                console.log('✅ Synthesis config restored from localStorage:', config);
+                return true;
+            } catch (error) {
+                console.error('Error loading config:', error);
+                return false;
+            }
+        }
+        
+        // Save clone configuration
+        function saveCloneConfig() {
+            const config = {
+                language: document.getElementById('clone-language')?.value || 'pt',
+                speed: document.getElementById('clone-speed')?.value || '1.0',
+                temperature: document.getElementById('clone-temperature')?.value || '0.75',
+                top_k: document.getElementById('clone-top-k')?.value || '50',
+                top_p: document.getElementById('clone-top-p')?.value || '0.85',
+                length_scale: document.getElementById('clone-length-scale')?.value || '1.0',
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem(CLONE_CONFIG_STORAGE_KEY, JSON.stringify(config));
+            console.log('✅ Clone config saved to localStorage');
+        }
+        
+        // Load clone configuration
+        function loadCloneConfig() {
+            try {
+                const saved = localStorage.getItem(CLONE_CONFIG_STORAGE_KEY);
+                if (!saved) return false;
+                
+                const config = JSON.parse(saved);
+                
+                // Restore clone settings
+                if (document.getElementById('clone-language')) {
+                    document.getElementById('clone-language').value = config.language;
+                }
+                if (document.getElementById('clone-speed')) {
+                    document.getElementById('clone-speed').value = config.speed;
+                    document.getElementById('clone-speed-value').textContent = parseFloat(config.speed).toFixed(1) + 'x';
+                }
+                if (document.getElementById('clone-temperature')) {
+                    document.getElementById('clone-temperature').value = config.temperature;
+                    document.getElementById('clone-temp-value').textContent = parseFloat(config.temperature).toFixed(2);
+                }
+                if (document.getElementById('clone-top-k')) {
+                    document.getElementById('clone-top-k').value = config.top_k;
+                    document.getElementById('clone-topk-value').textContent = config.top_k;
+                }
+                if (document.getElementById('clone-top-p')) {
+                    document.getElementById('clone-top-p').value = config.top_p;
+                    document.getElementById('clone-topp-value').textContent = parseFloat(config.top_p).toFixed(2);
+                }
+                if (document.getElementById('clone-length-scale')) {
+                    document.getElementById('clone-length-scale').value = config.length_scale;
+                    document.getElementById('clone-lengthscale-value').textContent = parseFloat(config.length_scale).toFixed(1) + 'x';
+                }
+                
+                console.log('✅ Clone config restored from localStorage:', config);
+                return true;
+            } catch (error) {
+                console.error('Error loading clone config:', error);
+                return false;
+            }
+        }
+        
+        // Clear all saved configurations
+        function clearAllConfigs() {
+            if (confirm('Tem certeza que deseja limpar todas as configurações salvas?')) {
+                localStorage.removeItem(CONFIG_STORAGE_KEY);
+                localStorage.removeItem(CLONE_CONFIG_STORAGE_KEY);
+                updateConfigIndicator();
+                console.log('✅ All configurations cleared');
+                alert('Configurações limpas com sucesso!');
+            }
+        }
+        
+        // Initialize: Load configs on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                loadConfig();
+                loadCloneConfig();
+                updateConfigIndicator();
+                initCustomPresets();
+                console.log('🔄 User configurations and custom presets loaded from localStorage');
+            }, 500);
+        });
+        
+        // Save configs periodically and on important events
+        document.addEventListener('change', function() {
+            // Save on any input/select change
+            saveConfig();
+            saveCloneConfig();
+        });
+        
+        // ====================================================================
+        // TAB MANAGEMENT
+        // ====================================================================
+        
+        function switchTab(tabName) {
+            // Hide all tabs
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(tab => tab.classList.remove('active'));
+            
+            // Remove active class from buttons
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to button
+            event.target.classList.add('active');
+            
+            // Load tab-specific data
+            if (tabName === 'dashboard') {
+                refreshDashboard();
+            } else if (tabName === 'voices') {
+                loadVoicesList();
+            } else if (tabName === 'config') {
+                loadServerInfo();
+            }
+        }
+        
+        // ====================================================================
+        // STATUS MESSAGE HELPERS
+        // ====================================================================
+        
+        function showStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status show ${type}`;
+        }
+        
+        function hideStatus(elementId) {
+            const element = document.getElementById(elementId);
+            element.classList.remove('show');
+        }
+        
+        // Download audio from player element
+        function downloadAudio(audioElementId, filename) {
+            const audioElement = document.getElementById(audioElementId);
+            if (!audioElement || !audioElement.src) {
+                alert('Nenhum áudio para baixar');
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.href = audioElement.src;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Copy text to clipboard
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                // Show feedback
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copiado!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                alert('Erro ao copiar: ' + err);
+            });
+        }
+        
+        // ====================================================================
+        // DASHBOARD
+        // ====================================================================
+        
+        async function refreshDashboard() {
+            try {
+                const response = await fetch(`${API_URL}/v1/info`);
+                const data = await response.json();
+                
+                const statusDiv = document.getElementById('server-status');
+                statusDiv.innerHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value">${data.version}</div>
+                            <div class="stat-label">Versão</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${data.device}</div>
+                            <div class="stat-label">Dispositivo</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${data.languages.length}</div>
+                            <div class="stat-label">Idiomas</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Load voices
+                loadVoices();
+                
+                // Load OBS info
+                loadObsInfo();
+                
+            } catch (error) {
+                document.getElementById('server-status').innerHTML = `<p style="color: red;">Erro ao conectar ao servidor: ${error.message}</p>`;
+            }
+        }
+        
+        async function loadObsInfo() {
+            try {
+                const response = await fetch(`${API_URL}/obs-config`);
+                const data = await response.json();
+                
+                const connectionDiv = document.getElementById('obs-connections');
+                if (connectionDiv) {
+                    connectionDiv.textContent = data.active_connections || 0;
+                }
+            } catch (error) {
+                console.log('OBS não configurado:', error);
+            }
+        }
+        
+        async function loadVoices() {
+            try {
+                const response = await fetch(`${API_URL}/v1/voices`);
+                const data = await response.json();
+                
+                // Update dashboard
+                const dashboardDiv = document.getElementById('dashboard-voices');
+                dashboardDiv.innerHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value">${data.total}</div>
+                            <div class="stat-label">Total de Vozes</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${data.preset}</div>
+                            <div class="stat-label">Vozes Padrão</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${data.custom}</div>
+                            <div class="stat-label">Vozes Customizadas</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Update synthesize select
+                const select = document.getElementById('tts-voice');
+                select.innerHTML = '';
+                data.voices.forEach(voice => {
+                    const option = document.createElement('option');
+                    option.value = voice.id;
+                    option.textContent = `${voice.name} (${voice.language})`;
+                    select.appendChild(option);
+                });
+                
+            } catch (error) {
+                console.error('Error loading voices:', error);
+            }
+        }
+        
+        // ====================================================================
+        // SYNTHESIZE
+        // ====================================================================
+        
+        async function synthesize(event) {
+            event.preventDefault();
+            
+            const text = document.getElementById('tts-text').value;
+            const language = document.getElementById('tts-language').value;
+            const voice = document.getElementById('tts-voice').value;
+            
+            // Get synthesis configuration parameters
+            const speed = parseFloat(document.getElementById('tts-speed').value);
+            const temperature = parseFloat(document.getElementById('tts-temperature').value);
+            const top_k = parseInt(document.getElementById('tts-top-k').value);
+            const top_p = parseFloat(document.getElementById('tts-top-p').value);
+            const length_scale = parseFloat(document.getElementById('tts-length-scale').value);
+            const gpt_cond_len = parseFloat(document.getElementById('tts-gpt-cond-len').value);
+            
+            showStatus('tts-status', 'Sintetizando...', 'loading');
+            
+            try {
+                const formData = new FormData();
+                formData.append('text', text);
+                formData.append('language', language);
+                formData.append('voice', voice);
+                formData.append('speed', speed);
+                formData.append('temperature', temperature);
+                formData.append('top_k', top_k);
+                formData.append('top_p', top_p);
+                formData.append('length_scale', length_scale);
+                formData.append('gpt_cond_len', gpt_cond_len);
+                
+                const response = await fetch(`${API_URL}/v1/synthesize`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    document.getElementById('tts-audio').src = url;
+                    document.getElementById('tts-output').style.display = 'block';
+                    showStatus('tts-status', '✅ Síntese concluída com sucesso!', 'success');
+                } else {
+                    showStatus('tts-status', `Erro: ${response.status} - ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                showStatus('tts-status', `Erro: ${error.message}`, 'error');
+            }
+        }
+        
+        // ====================================================================
+        // VOICE CLONE
+        // ====================================================================
+        
+        async function cloneVoice(event) {
+            event.preventDefault();
+            
+            const text = document.getElementById('clone-text').value;
+            const language = document.getElementById('clone-language').value;
+            const wavFiles = document.getElementById('clone-wav').files;
+            
+            if (wavFiles.length === 0) {
+                showStatus('clone-status', 'Selecione pelo menos um arquivo WAV', 'error');
+                return;
+            }
+            
+            if (wavFiles.length > 5) {
+                showStatus('clone-status', 'Máximo de 5 arquivos WAV permitido', 'error');
+                return;
+            }
+            
+            // Get synthesis configuration parameters
+            const speed = parseFloat(document.getElementById('clone-speed').value);
+            const temperature = parseFloat(document.getElementById('clone-temperature').value);
+            const top_k = parseInt(document.getElementById('clone-top-k').value);
+            const top_p = parseFloat(document.getElementById('clone-top-p').value);
+            const length_scale = parseFloat(document.getElementById('clone-length-scale').value);
+            const gpt_cond_len = parseFloat(document.getElementById('tts-gpt-cond-len').value);
+            
+            showStatus('clone-status', `Clonando voz (${wavFiles.length} referência(s)) e sintetizando...`, 'loading');
+            
+            try {
+                const formData = new FormData();
+                formData.append('text', text);
+                formData.append('language', language);
+                
+                // Add all speaker files (backend accepts both speaker_wav and speaker_wavs)
+                if (wavFiles.length === 1) {
+                    formData.append('speaker_wav', wavFiles[0]);
+                } else {
+                    for (let i = 0; i < wavFiles.length; i++) {
+                        formData.append('speaker_wavs', wavFiles[i]);
+                    }
+                }
+                
+                formData.append('speed', speed);
+                formData.append('temperature', temperature);
+                formData.append('top_k', top_k);
+                formData.append('top_p', top_p);
+                formData.append('length_scale', length_scale);
+                formData.append('gpt_cond_len', gpt_cond_len);
+                
+                const response = await fetch(`${API_URL}/v1/clone-voice`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    document.getElementById('clone-audio').src = url;
+                    document.getElementById('clone-output').style.display = 'block';
+                    showStatus('clone-status', `✅ Clonagem (${wavFiles.length} referência(s)) e síntese concluída!`, 'success');
+                } else {
+                    const error = await response.text();
+                    showStatus('clone-status', `Erro: ${error}`, 'error');
+                }
+            } catch (error) {
+                showStatus('clone-status', `Erro: ${error.message}`, 'error');
+            }
+        }
+        
+        // ====================================================================
+        // VOICE MANAGEMENT
+        // ====================================================================
+        
+        async function uploadVoice(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('upload-name').value;
+            const language = document.getElementById('upload-language').value;
+            const wavFile = document.getElementById('upload-wav').files[0];
+            
+            if (!wavFile) {
+                showStatus('upload-status', 'Selecione um arquivo WAV', 'error');
+                return;
+            }
+            
+            showStatus('upload-status', 'Fazendo upload...', 'loading');
+            
+            try {
+                const formData = new FormData();
+                formData.append('voice_name', name);
+                formData.append('language', language);
+                formData.append('wav_file', wavFile);
+                
+                const response = await fetch(`${API_URL}/v1/voices/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showStatus('upload-status', `✅ Voz "${name}" enviada com sucesso!`, 'success');
+                    document.getElementById('upload-name').value = '';
+                    document.getElementById('upload-wav').value = '';
+                    loadVoicesList();
+                    loadVoices();
+                } else {
+                    const error = await response.json();
+                    showStatus('upload-status', `Erro: ${error.detail}`, 'error');
+                }
+            } catch (error) {
+                showStatus('upload-status', `Erro: ${error.message}`, 'error');
+            }
+        }
+        
+        async function loadVoicesList() {
+            try {
+                const response = await fetch(`${API_URL}/v1/voices`);
+                const data = await response.json();
+                
+                const listDiv = document.getElementById('voices-list');
+                if (data.voices.length === 0) {
+                    listDiv.innerHTML = '<p>Nenhuma voz registrada.</p>';
+                    return;
+                }
+                
+                listDiv.innerHTML = data.voices.map(voice => `
+                    <div class="voice-card">
+                        <h3>${voice.name}</h3>
+                        <p><strong>ID:</strong> ${voice.id}</p>
+                        <p><strong>Tipo:</strong> <span class="badge ${voice.type}">${voice.type === 'preset' ? 'Padrão' : 'Customizada'}</span></p>
+                        <p><strong>Idioma:</strong> ${voice.language}</p>
+                        <p><strong>Criada em:</strong> ${new Date(voice.created_at).toLocaleDateString('pt-BR')}</p>
+                        ${voice.type === 'custom' ? `
+                            <div class="actions">
+                                <button onclick="deleteVoice('${voice.id}', '${voice.name}')" class="button-danger">🗑️ Deletar</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                document.getElementById('voices-list').innerHTML = `<p style="color: red;">Erro: ${error.message}</p>`;
+            }
+        }
+        
+        async function deleteVoice(voiceId, voiceName) {
+            if (!confirm(`Tem certeza que deseja deletar a voz "${voiceName}"?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/v1/voices/${voiceId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('Voz deletada com sucesso!');
+                    loadVoicesList();
+                    loadVoices();
+                } else {
+                    alert('Erro ao deletar voz');
+                }
+            } catch (error) {
+                alert(`Erro: ${error.message}`);
+            }
+        }
+        
+        // ====================================================================
+        // SERVER INFO & CACHE
+        // ====================================================================
+        
+        async function loadServerInfo() {
+            try {
+                const response = await fetch(`${API_URL}/v1/info`);
+                const data = await response.json();
+                
+                const infoDiv = document.getElementById('server-info');
+                infoDiv.innerHTML = `
+                    <p><strong>Nome:</strong> ${data.name}</p>
+                    <p><strong>Versão:</strong> ${data.version}</p>
+                    <p><strong>Modelo:</strong> ${data.model}</p>
+                    <p><strong>Dispositivo:</strong> ${data.device}</p>
+                    <p><strong>Idiomas:</strong> ${data.languages.length}</p>
+                    <p><strong>Tamanho máximo de voz:</strong> ${data.max_voice_size_mb}MB</p>
+                    <p><strong>Máximo de vozes customizadas:</strong> ${data.max_custom_voices}</p>
+                `;
+            } catch (error) {
+                document.getElementById('server-info').innerHTML = `<p style="color: red;">Erro: ${error.message}</p>`;
+            }
+        }
+        
+        async function clearMemoryCache() {
+            showStatus('cache-clear-status', 'Limpando cache de memória...', 'loading');
+            // This would require a new endpoint
+            showStatus('cache-clear-status', '⚠️ Funcionalidade não disponível nesta versão', 'info');
+        }
+        
+        async function clearDiskCache() {
+            showStatus('cache-clear-status', 'Limpando cache de disco...', 'loading');
+            // This would require a new endpoint
+            showStatus('cache-clear-status', '⚠️ Funcionalidade não disponível nesta versão', 'info');
+        }
+        
+        async function clearAllCache() {
+            showStatus('cache-clear-status', 'Limpando todos os caches...', 'loading');
+            // This would require a new endpoint
+            showStatus('cache-clear-status', '⚠️ Funcionalidade não disponível nesta versão', 'info');
+        }
+        
+        // ====================================================================
+        // VOICE RECORDING (Web Audio API)
+        // ====================================================================
+        
+        // WAV Encoder function - encodes raw PCM to valid WAV format
+        function encodeWAV(samples, sampleRate) {
+            const buffer = new ArrayBuffer(44 + samples.length * 2);
+            const view = new DataView(buffer);
+            
+            const writeString = (offset, string) => {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            };
+            
+            const floatTo16BitPCM = (output, offset, input) => {
+                for (let i = 0; i < input.length; i++, offset += 2) {
+                    const s = Math.max(-1, Math.min(1, input[i]));
+                    output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+                }
+            };
+            
+            // WAV file header
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + samples.length * 2, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true); // fmt chunk size
+            view.setUint16(20, 1, true); // PCM
+            view.setUint16(22, 1, true); // mono
+            view.setUint32(24, sampleRate, true); // sample rate
+            view.setUint32(28, sampleRate * 2, true); // byte rate
+            view.setUint16(32, 2, true); // block align
+            view.setUint16(34, 16, true); // bits per sample
+            writeString(36, 'data');
+            view.setUint32(40, samples.length * 2, true);
+            
+            floatTo16BitPCM(view, 44, samples);
+            
+            return new Blob([buffer], { type: 'audio/wav' });
+        }
+        
+        let mediaRecorder = null;
+        let audioContext = null;
+        let analyser = null;
+        let recordedChunks = [];
+        let recordingStartTime = null;
+        let recordingPaused = false;
+        let pausedTime = 0;
+        let animationFrameId = null;
+        let recordingStream = null;
+        let audioProcessor = null;
+        let recordedSamples = [];  // Store raw audio samples
+        let recordingSampleRate = 0;
+        
+        async function startRecording() {
+            try {
+                // Request microphone access
+                recordingStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+                
+                // Create audio context for visualization and processing
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                recordingSampleRate = audioContext.sampleRate;
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 2048;  // Increased for better frequency resolution
+                
+                const source = audioContext.createMediaStreamSource(recordingStream);
+                
+                // Create ScriptProcessor for direct audio access
+                audioProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+                recordedSamples = [];
+                
+                audioProcessor.onaudioprocess = (event) => {
+                    const inputData = event.inputBuffer.getChannelData(0);
+                    // Copy audio data
+                    recordedSamples.push(...Array.from(inputData));
+                };
+                
+                // Connect: source → analyser → scriptProcessor
+                source.connect(analyser);
+                analyser.connect(audioProcessor);
+                audioProcessor.connect(audioContext.destination);
+                
+                // Also use MediaRecorder as backup to ensure we have valid audio
+                mediaRecorder = new MediaRecorder(recordingStream);
+                recordedChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.start();
+                
+                recordingStartTime = Date.now() - pausedTime;
+                recordingPaused = false;
+                
+                // Update UI
+                document.getElementById('btn-start-recording').style.display = 'none';
+                document.getElementById('btn-stop-recording').style.display = 'block';
+                document.getElementById('btn-pause-recording').style.display = 'block';
+                document.getElementById('record-status').textContent = '🔴 Gravando...';
+                document.getElementById('record-status').className = 'recording-pulse';
+                document.getElementById('waveform-canvas').style.display = 'block';
+                
+                // Start visualization
+                visualizeAudio();
+                updateRecordingTime();
+                
+            } catch (error) {
+                alert('❌ Erro ao acessar o microfone: ' + error.message);
+                console.error('Recording error:', error);
+            }
+        }
+        
+        function pauseRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.pause();
+            }
+            
+            if (audioProcessor) {
+                audioProcessor.disconnect();
+            }
+            
+            recordingPaused = true;
+            pausedTime += Date.now() - recordingStartTime;
+            
+            document.getElementById('btn-pause-recording').textContent = '▶ Retomar';
+            document.getElementById('btn-pause-recording').onclick = resumeRecording;
+            document.getElementById('record-status').textContent = '⏸ Pausado';
+            document.getElementById('record-status').classList.remove('recording-pulse');
+            
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+        }
+        
+        function resumeRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'paused') {
+                mediaRecorder.resume();
+            }
+            
+            if (audioContext && audioContext.state === 'running') {
+                const source = audioContext.createMediaStreamSource(recordingStream);
+                const analyser = audioContext.createAnalyser();
+                analyser.fftSize = 2048;
+                
+                audioProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+                
+                audioProcessor.onaudioprocess = (event) => {
+                    const inputData = event.inputBuffer.getChannelData(0);
+                    recordedSamples.push(...Array.from(inputData));
+                };
+                
+                source.connect(analyser);
+                analyser.connect(audioProcessor);
+                audioProcessor.connect(audioContext.destination);
+            }
+            
+            recordingPaused = false;
+            recordingStartTime = Date.now();
+            
+            document.getElementById('btn-pause-recording').textContent = '⏸ Pausar';
+            document.getElementById('btn-pause-recording').onclick = pauseRecording;
+            document.getElementById('record-status').textContent = '🔴 Gravando...';
+            document.getElementById('record-status').className = 'recording-pulse';
+            
+            visualizeAudio();
+            updateRecordingTime();
+        }
+        
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            
+            if (audioProcessor) {
+                audioProcessor.disconnect();
+            }
+            
+            recordingStream.getTracks().forEach(track => track.stop());
+            
+            // Use ScriptProcessor data if available, otherwise use MediaRecorder
+            if (recordedSamples.length > 0) {
+                // Use our captured samples
+                const audioBlob = encodeWAV(recordedSamples, recordingSampleRate);
+                const audioUrl = URL.createObjectURL(audioBlob);
+                document.getElementById('recorded-audio').src = audioUrl;
+                document.getElementById('playback-section').style.display = 'block';
+                document.getElementById('upload-section').style.display = 'block';
+                window.recordedAudioBlob = audioBlob;
+            } else if (recordedChunks.length > 0) {
+                // Fallback to MediaRecorder
+                const audioBlob = new Blob(recordedChunks, { type: 'audio/wav' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                document.getElementById('recorded-audio').src = audioUrl;
+                document.getElementById('playback-section').style.display = 'block';
+                document.getElementById('upload-section').style.display = 'block';
+                window.recordedAudioBlob = audioBlob;
+            }
+            
+            document.getElementById('btn-start-recording').style.display = 'block';
+            document.getElementById('btn-stop-recording').style.display = 'none';
+            document.getElementById('btn-pause-recording').style.display = 'none';
+            document.getElementById('btn-pause-recording').textContent = '⏸ Pausar';
+            document.getElementById('btn-pause-recording').onclick = pauseRecording;
+            document.getElementById('record-status').textContent = '✅ Finalizada';
+            document.getElementById('record-status').classList.remove('recording-pulse');
+            
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+        }
+        
+        function updateRecordingTime() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                const elapsed = recordingPaused ? pausedTime : (Date.now() - recordingStartTime + pausedTime);
+                const seconds = Math.floor((elapsed / 1000) % 60);
+                const minutes = Math.floor((elapsed / 1000 / 60) % 60);
+                document.getElementById('record-duration').textContent = 
+                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                
+                setTimeout(updateRecordingTime, 100);
+            }
+        }
+        
+        function visualizeAudio() {
+            if (!analyser || !audioContext || audioContext.state === 'closed') {
+                return;
+            }
+            
+            const canvas = document.getElementById('waveform-canvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            analyser.getByteFrequencyData(dataArray);
+            
+            // Draw waveform
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            const sliceWidth = canvas.width / dataArray.length;
+            let x = 0;
+            
+            for (let i = 0; i < dataArray.length; i++) {
+                const v = dataArray[i] / 128.0;
+                const y = (v * canvas.height) / 2;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, canvas.height - y);
+                } else {
+                    ctx.lineTo(x, canvas.height - y);
+                }
+                
+                x += sliceWidth;
+            }
+            
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+            
+            // Update level meter
+            const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+            const level = Math.floor((average / 255) * 10);
+            const levelBar = '█'.repeat(level) + '░'.repeat(10 - level);
+            const levelElement = document.getElementById('record-level');
+            if (levelElement) levelElement.textContent = levelBar;
+            
+            if (audioContext && audioContext.state !== 'closed') {
+                animationFrameId = requestAnimationFrame(visualizeAudio);
+            }
+        }
+        
+        function downloadRecording() {
+            if (window.recordedAudioBlob) {
+                const url = URL.createObjectURL(window.recordedAudioBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `voz_${new Date().getTime()}.wav`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+        
+        function discardRecording() {
+            if (confirm('Tem certeza que deseja descartar a gravação?')) {
+                window.recordedAudioBlob = null;
+                document.getElementById('recorded-audio').src = '';
+                document.getElementById('playback-section').style.display = 'none';
+                document.getElementById('upload-section').style.display = 'none';
+                document.getElementById('record-duration').textContent = '00:00';
+                document.getElementById('record-status').textContent = 'Pronto';
+                pausedTime = 0;
+            }
+        }
+        
+        async function saveRecordedVoice() {
+            if (!window.recordedAudioBlob) {
+                showStatus('save-voice-status', 'Nenhuma gravação disponível', 'error');
+                return;
+            }
+            
+            const voiceName = document.getElementById('record-name').value;
+            const language = document.getElementById('record-language').value;
+            
+            if (!voiceName || voiceName.trim() === '') {
+                showStatus('save-voice-status', 'Digite um nome para a voz', 'error');
+                return;
+            }
+            
+            showStatus('save-voice-status', 'Salvando voz no servidor...', 'loading');
+            
+            try {
+                const formData = new FormData();
+                formData.append('voice_name', voiceName);
+                formData.append('language', language);
+                formData.append('wav_file', window.recordedAudioBlob, 'recorded_voice.wav');
+                
+                const response = await fetch(`${API_URL}/v1/voices/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showStatus('save-voice-status', `✅ Voz "${voiceName}" salva com sucesso!`, 'success');
+                    
+                    // Reset form
+                    setTimeout(() => {
+                        document.getElementById('record-name').value = '';
+                        window.recordedAudioBlob = null;
+                        document.getElementById('recorded-audio').src = '';
+                        document.getElementById('playback-section').style.display = 'none';
+                        document.getElementById('upload-section').style.display = 'none';
+                        document.getElementById('record-duration').textContent = '00:00';
+                        document.getElementById('record-status').textContent = 'Pronto';
+                        pausedTime = 0;
+                        
+                        // Reload voices list
+                        loadVoicesList();
+                        loadVoices();
+                    }, 1500);
+                } else {
+                    const error = await response.json();
+                    showStatus('save-voice-status', `❌ Erro: ${error.detail}`, 'error');
+                }
+            } catch (error) {
+                showStatus('save-voice-status', `❌ Erro: ${error.message}`, 'error');
+            }
+        }
+        
+        // ====================================================================
+        // SYNTHESIS CONFIGURATION CONTROLS
+        // ====================================================================
+        
+        // Update speed value display
+        document.addEventListener('input', function(e) {
+            if (e.target.id === 'tts-speed') {
+                document.getElementById('speed-value').textContent = parseFloat(e.target.value).toFixed(1) + 'x';
+            }
+        });
+        
+        // Update temperature value display
+        document.addEventListener('input', function(e) {
+            if (e.target.id === 'tts-temperature') {
+                document.getElementById('temp-value').textContent = parseFloat(e.target.value).toFixed(2);
+            }
+        });
+        
+        // Update top-k value display
+        document.addEventListener('input', function(e) {
+            if (e.target.id === 'tts-top-k') {
+                document.getElementById('topk-value').textContent = parseInt(e.target.value);
+            }
+        });
+        
+        // Update top-p value display
+        document.addEventListener('input', function(e) {
+            if (e.target.id === 'tts-top-p') {
+                document.getElementById('topp-value').textContent = parseFloat(e.target.value).toFixed(2);
+            }
+        });
+        
+        // Update length-scale value display
+        document.addEventListener('input', function(e) {
+            if (e.target.id === 'tts-length-scale') {
+                document.getElementById('lengthscale-value').textContent = parseFloat(e.target.value).toFixed(1) + 'x';
+            }
+        });
+        
+        // Update gpt-cond-len value display
+        document.addEventListener('input', function(e) {
+            if (e.target.id === 'tts-gpt-cond-len') {
+                document.getElementById('gpt-cond-len-value').textContent = parseFloat(e.target.value).toFixed(1) + 's';
+            }
+        });
+        
+        // Clone voice configuration listeners
+        document.addEventListener('input', function(e) {
+            if (e.target.id === 'clone-speed') {
+                document.getElementById('clone-speed-value').textContent = parseFloat(e.target.value).toFixed(1) + 'x';
+            }
+        });
+        
+        document.addEventListener('input', function(e) {
+            if (e.target.id === 'clone-temperature') {
+                document.getElementById('clone-temp-value').textContent = parseFloat(e.target.value).toFixed(2);
+            }
+        });
+        
+        document.addEventListener('input', function(e) {
+            if (e.target.id === 'clone-top-k') {
+                document.getElementById('clone-topk-value').textContent = parseInt(e.target.value);
+            }
+        });
+        
+        document.addEventListener('input', function(e) {
+            if (e.target.id === 'clone-top-p') {
+                document.getElementById('clone-topp-value').textContent = parseFloat(e.target.value).toFixed(2);
+            }
+        });
+        
+        // Show selected clone files in real-time
+        document.addEventListener('change', function(e) {
+            if (e.target.id === 'clone-wav') {
+                const files = e.target.files;
+                const filesList = document.getElementById('clone-files-list');
+                const filesPreview = document.getElementById('clone-files-preview');
+                
+                if (files.length > 0) {
+                    filesPreview.innerHTML = '';
+                    for (let i = 0; i < files.length; i++) {
+                        const li = document.createElement('li');
+                        li.textContent = `${i + 1}. ${files[i].name} (${(files[i].size / 1024 / 1024).toFixed(2)}MB)`;
+                        filesPreview.appendChild(li);
+                    }
+                    filesList.style.display = 'block';
+                    
+                    // Show warning if more than 3 files
+                    if (files.length > 3) {
+                        const warning = document.createElement('p');
+                        warning.style.color = '#f39c12';
+                        warning.style.marginTop = '10px';
+                        warning.innerHTML = `⚠️ Você selecionou ${files.length} arquivos. Ideal: 3-5 para melhor qualidade.`;
+                        filesPreview.parentNode.appendChild(warning);
+                    }
+                } else {
+                    filesList.style.display = 'none';
+                }
+            }
+        });
+        
+        document.addEventListener('input', function(e) {
+            if (e.target.id === 'clone-length-scale') {
+                document.getElementById('clone-lengthscale-value').textContent = parseFloat(e.target.value).toFixed(1) + 'x';
+            }
+        });
+        
+        // Reset synthesis configuration to defaults
+        function resetSynthesisConfig() {
+            document.getElementById('tts-speed').value = '1.0';
+            document.getElementById('tts-temperature').value = '0.75';
+            document.getElementById('tts-top-k').value = '50';
+            document.getElementById('tts-top-p').value = '0.85';
+            document.getElementById('tts-length-scale').value = '1.0';
+            document.getElementById('tts-gpt-cond-len').value = '12';
+            document.getElementById('tts-preset').value = '';
+            
+            // Update displays
+            document.getElementById('speed-value').textContent = '1.0x';
+            document.getElementById('temp-value').textContent = '0.75';
+            document.getElementById('topk-value').textContent = '50';
+            document.getElementById('topp-value').textContent = '0.85';
+            document.getElementById('lengthscale-value').textContent = '1.0x';
+            document.getElementById('gpt-cond-len-value').textContent = '12s';
+            
+            // Update localStorage with default values
+            saveConfig();
+            
+            showStatus('tts-status', '✅ Configurações restauradas aos padrões', 'success');
+        }
+        
+        // Load synthesis presets
+        // ====================================================================
+        // CUSTOM PRESETS MANAGEMENT
+        // ====================================================================
+        
+        const CUSTOM_PRESETS_KEY = 'speakerbot_custom_presets';
+        
+        // Load custom presets from localStorage
+        function loadCustomPresets() {
+            try {
+                const saved = localStorage.getItem(CUSTOM_PRESETS_KEY);
+                return saved ? JSON.parse(saved) : {};
+            } catch (error) {
+                console.error('Error loading custom presets:', error);
+                return {};
+            }
+        }
+        
+        // Save custom presets to localStorage
+        function saveCustomPresets(presets) {
+            try {
+                localStorage.setItem(CUSTOM_PRESETS_KEY, JSON.stringify(presets));
+                updateCustomPresetsUI();
+                console.log('✅ Custom presets saved');
+            } catch (error) {
+                console.error('Error saving custom presets:', error);
+            }
+        }
+        
+        // Create a preset from current settings
+        function getCurrentPresetConfig() {
+            return {
+                speed: parseFloat(document.getElementById('tts-speed').value),
+                temperature: parseFloat(document.getElementById('tts-temperature').value),
+                top_k: parseInt(document.getElementById('tts-top-k').value),
+                top_p: parseFloat(document.getElementById('tts-top-p').value),
+                length_scale: parseFloat(document.getElementById('tts-length-scale').value),
+                gpt_cond_len: parseFloat(document.getElementById('tts-gpt-cond-len').value),
+                timestamp: new Date().toISOString()
+            };
+        }
+        
+        // Save current settings as a custom preset
+        function saveCustomPreset() {
+            const name = document.getElementById('custom-preset-name').value.trim();
+            
+            if (!name) {
+                alert('Por favor, digite um nome para o preset');
+                return;
+            }
+            
+            if (name.length > 30) {
+                alert('O nome do preset não pode ter mais de 30 caracteres');
+                return;
+            }
+            
+            // Check if name is a reserved preset
+            if (['natural', 'slow_and_clear', 'fast_and_energetic', 'robotic', 'expressive', 'whisper', 'dramatic'].includes(name.toLowerCase())) {
+                alert('Este nome é reservado. Escolha outro nome.');
+                return;
+            }
+            
+            const customPresets = loadCustomPresets();
+            const config = getCurrentPresetConfig();
+            
+            customPresets[name] = config;
+            saveCustomPresets(customPresets);
+            
+            // Clear input
+            document.getElementById('custom-preset-name').value = '';
+            
+            showStatus('tts-status', `✅ Preset "${name}" salvo com sucesso!`, 'success');
+        }
+        
+        // Delete a custom preset
+        function deleteCustomPreset(name) {
+            if (!confirm(`Deseja deletar o preset "${name}"?`)) {
+                return;
+            }
+            
+            const customPresets = loadCustomPresets();
+            delete customPresets[name];
+            saveCustomPresets(customPresets);
+            
+            showStatus('tts-status', `✅ Preset "${name}" deletado com sucesso!`, 'success');
+        }
+        
+        // Load a custom preset
+        function loadCustomPresetConfig(name) {
+            const customPresets = loadCustomPresets();
+            const config = customPresets[name];
+            
+            if (!config) {
+                alert('Preset não encontrado');
+                return;
+            }
+            
+            // Apply preset values
+            document.getElementById('tts-speed').value = config.speed;
+            document.getElementById('tts-temperature').value = config.temperature;
+            document.getElementById('tts-top-k').value = config.top_k;
+            document.getElementById('tts-top-p').value = config.top_p;
+            document.getElementById('tts-length-scale').value = config.length_scale;
+            document.getElementById('tts-gpt-cond-len').value = config.gpt_cond_len;
+            
+            // Update displays
+            document.getElementById('speed-value').textContent = (config.speed).toFixed(1) + 'x';
+            document.getElementById('temp-value').textContent = (config.temperature).toFixed(2);
+            document.getElementById('topk-value').textContent = config.top_k;
+            document.getElementById('topp-value').textContent = (config.top_p).toFixed(2);
+            document.getElementById('lengthscale-value').textContent = (config.length_scale).toFixed(1) + 'x';
+            document.getElementById('gpt-cond-len-value').textContent = (config.gpt_cond_len).toFixed(1) + 's';
+            
+            // Update select
+            document.getElementById('tts-preset').value = '';
+            
+            showStatus('tts-status', `✅ Preset "${name}" carregado!`, 'success');
+        }
+        
+        // Update custom presets UI
+        function updateCustomPresetsUI() {
+            const customPresets = loadCustomPresets();
+            const presetNames = Object.keys(customPresets);
+            
+            // Update select dropdown
+            const optgroup = document.getElementById('custom-presets-group');
+            optgroup.innerHTML = '';
+            
+            presetNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = 'custom_' + name;
+                option.textContent = '✨ ' + name;
+                optgroup.appendChild(option);
+            });
+            
+            // Update custom presets list
+            const buttonsList = document.getElementById('custom-presets-buttons');
+            const presetsListDiv = document.getElementById('custom-presets-list');
+            
+            if (presetNames.length === 0) {
+                presetsListDiv.style.display = 'none';
+                return;
+            }
+            
+            presetsListDiv.style.display = 'block';
+            buttonsList.innerHTML = '';
+            
+            presetNames.forEach(name => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.style.cssText = 'padding: 5px 8px; font-size: 11px; background: #0066cc; color: white; border: none; border-radius: 3px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;';
+                btn.innerHTML = `<span>📌 ${name}</span><span style="cursor: pointer; margin-left: 5px; font-weight: bold;" onclick="event.stopPropagation(); deleteCustomPreset('${name}')">✕</span>`;
+                btn.onclick = () => loadCustomPresetConfig(name);
+                buttonsList.appendChild(btn);
+            });
+        }
+        
+        // Initialize custom presets on page load
+        function initCustomPresets() {
+            updateCustomPresetsUI();
+            
+            // Handle select change for custom presets
+            const presetSelect = document.getElementById('tts-preset');
+            presetSelect.addEventListener('change', function() {
+                if (this.value.startsWith('custom_')) {
+                    const presetName = this.value.replace('custom_', '');
+                    loadCustomPresetConfig(presetName);
+                }
+            });
+        }
+        
+        const synthesisPresets = {
+            natural: { speed: 1.0, temperature: 0.75, top_k: 50, top_p: 0.85, length_scale: 1.0, gpt_cond_len: 12.0 },
+            slow_and_clear: { speed: 0.7, temperature: 0.5, top_k: 30, top_p: 0.75, length_scale: 1.1, gpt_cond_len: 15.0 },
+            fast_and_energetic: { speed: 1.3, temperature: 0.85, top_k: 70, top_p: 0.9, length_scale: 0.9, gpt_cond_len: 10.0 },
+            robotic: { speed: 1.0, temperature: 0.1, top_k: 0, top_p: 0.5, length_scale: 1.0, gpt_cond_len: 8.0 },
+            expressive: { speed: 1.0, temperature: 0.95, top_k: 100, top_p: 0.95, length_scale: 1.05, gpt_cond_len: 18.0 },
+            whisper: { speed: 0.8, temperature: 0.6, top_k: 40, top_p: 0.8, length_scale: 0.9, gpt_cond_len: 14.0 },
+            dramatic: { speed: 1.1, temperature: 0.9, top_k: 80, top_p: 0.92, length_scale: 1.15, gpt_cond_len: 16.0 }
+        };
+        
+        function loadSynthesisPreset() {
+            const preset = document.getElementById('tts-preset').value;
+            
+            if (!preset || !synthesisPresets[preset]) {
+                return;
+            }
+            
+            const config = synthesisPresets[preset];
+            
+            // Apply preset values
+            document.getElementById('tts-speed').value = config.speed;
+            document.getElementById('tts-temperature').value = config.temperature;
+            document.getElementById('tts-top-k').value = config.top_k;
+            document.getElementById('tts-top-p').value = config.top_p;
+            document.getElementById('tts-length-scale').value = config.length_scale;
+            document.getElementById('tts-gpt-cond-len').value = config.gpt_cond_len;
+            
+            // Update displays
+            document.getElementById('speed-value').textContent = (config.speed).toFixed(1) + 'x';
+            document.getElementById('temp-value').textContent = (config.temperature).toFixed(2);
+            document.getElementById('topk-value').textContent = config.top_k;
+            document.getElementById('topp-value').textContent = (config.top_p).toFixed(2);
+            document.getElementById('lengthscale-value').textContent = (config.length_scale).toFixed(1) + 'x';
+            document.getElementById('gpt-cond-len-value').textContent = (config.gpt_cond_len).toFixed(1) + 's';
+            
+            showStatus('tts-status', `✅ Preset "${preset}" carregado com sucesso`, 'success');
+        }
+        
+        // ====================================================================
+        // GPU OPTIMIZATION SETTINGS
+        // ====================================================================
+        
+        async function loadGPUSettings() {
+            try {
+                const response = await fetch(`${API_URL}/v1/synthesis-config`);
+                const config = await response.json();
+                
+                if (config.advanced_settings && config.advanced_settings.gpu_optimizations) {
+                    const gpuOpts = config.advanced_settings.gpu_optimizations;
+                    
+                    // Update GPU status badge
+                    const statusBadge = document.getElementById('gpu-status-badge');
+                    if (config.advanced_settings.gpu_enabled) {
+                        statusBadge.textContent = `✅ GPU Ativo (${config.advanced_settings.gpu_device})`;
+                        statusBadge.style.background = '#27ae60';
+                    } else {
+                        statusBadge.textContent = '⚠️ CPU (GPU não disponível)';
+                        statusBadge.style.background = '#f39c12';
+                    }
+                    
+                    // Load settings into UI
+                    document.getElementById('gpu-memory-fraction').value = gpuOpts.memory_fraction.current;
+                    document.getElementById('gpu-memory-value').textContent = Math.round(gpuOpts.memory_fraction.current * 100) + '%';
+                    document.getElementById('gpu-half-precision').checked = gpuOpts.use_half_precision.current;
+                    document.getElementById('gpu-batch-processing').checked = gpuOpts.batch_processing.current;
+                    document.getElementById('gpu-int8-quantization').checked = gpuOpts.use_int8_quantization.current;
+                    document.getElementById('gpu-model-cache').checked = gpuOpts.enable_model_cache.current;
+                    
+                    updatePerformanceEstimate();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar configurações de GPU:', error);
+                document.getElementById('gpu-status-badge').textContent = '❌ Erro ao carregar';
+            }
+        }
+        
+        function updatePerformanceEstimate() {
+            let speedup = 1.0;
+            
+            if (document.getElementById('gpu-half-precision').checked) {
+                speedup *= 2.5;
+            }
+            
+            if (document.getElementById('gpu-int8-quantization').checked) {
+                speedup *= 1.5;
+            }
+            
+            const baseLatency = 1000;
+            const estimatedLatency = Math.round(baseLatency / speedup);
+            
+            document.getElementById('base-latency').textContent = baseLatency + 'ms';
+            document.getElementById('speedup-estimate').textContent = speedup.toFixed(1) + 'x';
+            document.getElementById('estimated-latency').textContent = estimatedLatency + 'ms';
+        }
+        
+        async function updateGPUSettings() {
+            updatePerformanceEstimate();
+            
+            try {
+                const formData = new FormData();
+                formData.append('memory_fraction', document.getElementById('gpu-memory-fraction').value);
+                formData.append('use_half_precision', document.getElementById('gpu-half-precision').checked);
+                formData.append('batch_processing', document.getElementById('gpu-batch-processing').checked);
+                formData.append('use_int8_quantization', document.getElementById('gpu-int8-quantization').checked);
+                formData.append('enable_model_cache', document.getElementById('gpu-model-cache').checked);
+                
+                const response = await fetch(`${API_URL}/v1/gpu-settings`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ Configurações de GPU atualizadas:', result);
+                    
+                    // Update memory value display
+                    const memFrac = parseFloat(document.getElementById('gpu-memory-fraction').value);
+                    document.getElementById('gpu-memory-value').textContent = Math.round(memFrac * 100) + '%';
+                    
+                    showStatus('tts-status', '⚡ Configurações de GPU atualizadas!', 'success');
+                } else {
+                    console.error('Erro ao atualizar configurações de GPU');
+                    showStatus('tts-status', '❌ Erro ao atualizar configurações de GPU', 'error');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showStatus('tts-status', `❌ Erro: ${error.message}`, 'error');
+            }
+        }
+        
+        // ====================================================================
+        // FILE MONITOR PATH PERSISTENCE
+        // ====================================================================
+        
+        const FILE_MONITOR_PATH_KEY = 'speakerbot_file_monitor_path';
+        
+        function saveFileMonitorPath(path) {
+            localStorage.setItem(FILE_MONITOR_PATH_KEY, path);
+            
+            // Show saved indicator
+            const indicator = document.getElementById('file-monitor-path-saved');
+            indicator.style.display = 'inline';
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 3000);
+            
+            console.log('💾 Caminho do arquivo salvo:', path);
+        }
+        
+        function loadFileMonitorPath() {
+            const saved = localStorage.getItem(FILE_MONITOR_PATH_KEY);
+            if (saved) {
+                document.getElementById('file-monitor-path').value = saved;
+                console.log('📂 Caminho do arquivo restaurado:', saved);
+            }
+        }
+        
+        // ====================================================================
+        // FILE MONITORING & REAL-TIME SYNTHESIS
+        // ====================================================================
+        
+        let fileMonitorActive = false;
+        let fileMonitorInterval = null;
+        let fileMonitorLastContent = '';
+        let fileMonitorLineCount = 0;
+        let fileMonitorAudioList = [];
+        let audioPlaybackQueue = [];
+        let isPlayingAudio = false;
+        let currentAudioElement = null;
+        let processedAudioIds = new Set();  // Track processed audio IDs to prevent duplicates
+        let audioIdCounter = 0;  // Global counter for unique audio IDs
+        
+        function addMonitorLog(message) {
+            const logDiv = document.getElementById('monitor-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logEntry.style.marginBottom = '2px';
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function clearMonitorLog() {
+            const logDiv = document.getElementById('monitor-log');
+            logDiv.innerHTML = '<div style="color: #a0a0a0;">Log limpo</div>';
+        }
+        
+        function updateMonitorStatus(status) {
+            const statusText = document.getElementById('monitor-status-text');
+            statusText.textContent = status;
+            statusText.style.color = status === '▶️ Monitorando' ? '#4ade80' : '#f87171';
+        }
+        
+        function getRandomVoice() {
+            const voiceSelect = document.getElementById('file-monitor-voice');
+            const options = voiceSelect.querySelectorAll('option:not([value=""])');
+            if (options.length === 0) return null;
+            return options[Math.floor(Math.random() * options.length)].value;
+        }
+        
+        // Queue management for sequential audio playback
+        function addAudioToQueue(audioElement, text, audioId) {
+            // Validar elemento
+            if (!audioElement || typeof audioId !== 'string') {
+                addMonitorLog(`⚠️ Tentativa de adicionar áudio inválido à fila`);
+                return;
+            }
+            
+            // Check if this audio ID was already processed (prevent duplicates)
+            if (processedAudioIds.has(audioId)) {
+                addMonitorLog(`⏭️ Áudio duplicado ignorado [ID: ${audioId}]`);
+                return;
+            }
+            
+            // Mark as processed IMMEDIATELY to prevent re-adds
+            processedAudioIds.add(audioId);
+            
+            // Add to queue
+            audioPlaybackQueue.push({ 
+                element: audioElement, 
+                text: text, 
+                id: audioId,
+                added_at: Date.now()
+            });
+            
+            addMonitorLog(`➕ Adicionado à fila [ID: ${audioId}] - Fila total: ${audioPlaybackQueue.length}`);
+            
+            // Show queue status
+            const queueStatus = document.getElementById('queue-status');
+            if (queueStatus) {
+                queueStatus.textContent = `Fila: ${audioPlaybackQueue.length}`;
+            }
+            
+            // Start playback if nothing is currently playing
+            if (!isPlayingAudio) {
+                isPlayingAudio = true;
+                setTimeout(() => {
+                    playNextAudioInQueue();
+                }, 50);
+            }
+        }
+        
+        function playNextAudioInQueue() {
+            // Pause ALL audio elements
+            const allAudios = document.querySelectorAll('#monitor-audio-list audio');
+            allAudios.forEach(audio => {
+                audio.pause();
+                audio.currentTime = 0;
+            });
+            
+            // Remove highlight from all cards
+            const allCards = document.querySelectorAll('#monitor-audio-list > div');
+            allCards.forEach(card => {
+                card.style.background = 'rgba(102, 126, 234, 0.1)';
+                card.style.borderColor = 'rgba(102, 126, 234, 0.3)';
+                card.style.boxShadow = 'none';
+            });
+            
+            // Check if queue is empty
+            if (audioPlaybackQueue.length === 0) {
+                isPlayingAudio = false;
+                currentAudioElement = null;
+                const queueStatus = document.getElementById('queue-status');
+                if (queueStatus) {
+                    queueStatus.textContent = 'Fila: 0';
+                }
+                addMonitorLog('✅ Fila de reprodução finalizada');
+                return;
+            }
+            
+            // Get next item from queue
+            isPlayingAudio = true;
+            const audioItem = audioPlaybackQueue.shift();
+            
+            // Validate element exists
+            if (!audioItem.element || !audioItem.element.parentElement) {
+                addMonitorLog(`⚠️ [ID: ${audioItem.id}] Elemento de áudio não encontrado, pulando...`);
+                setTimeout(() => {
+                    playNextAudioInQueue();
+                }, 100);
+                return;
+            }
+            
+            currentAudioElement = audioItem.element;
+            
+            // Update queue status
+            const queueStatus = document.getElementById('queue-status');
+            if (queueStatus) {
+                queueStatus.textContent = `Fila: ${audioPlaybackQueue.length}`;
+            }
+            
+            // Highlight the current audio card with green glow
+            let audioCard = null;
+            if (currentAudioElement.parentElement) {
+                audioCard = currentAudioElement.parentElement;
+                if (audioCard && audioCard.classList && audioCard.classList.contains('audio-card')) {
+                    audioCard.style.background = 'rgba(102, 222, 126, 0.2)';
+                    audioCard.style.borderColor = 'rgba(102, 222, 126, 0.6)';
+                    audioCard.style.boxShadow = '0 0 15px rgba(102, 222, 126, 0.3)';
+                }
+            }
+            
+            addMonitorLog(`🔊 [ID: ${audioItem.id}] Reproduzindo: "${audioItem.text.substring(0, 50)}..."`);
+            
+            // Ensure audio starts from beginning
+            currentAudioElement.currentTime = 0;
+            
+            // Create handlers with proper closure
+            const handleAudioEnded = () => {
+                // Remover listeners imediatamente
+                currentAudioElement.removeEventListener('ended', handleAudioEnded);
+                currentAudioElement.removeEventListener('error', handleAudioError);
+                currentAudioElement.removeEventListener('pause', handleAudioPause);
+                
+                addMonitorLog(`✅ [ID: ${audioItem.id}] Áudio reproduzido`);
+                
+                // Play next in queue after delay
+                setTimeout(() => {
+                    playNextAudioInQueue();
+                }, 300);
+            };
+            
+            const handleAudioError = (error) => {
+                // Remover listeners imediatamente
+                currentAudioElement.removeEventListener('ended', handleAudioEnded);
+                currentAudioElement.removeEventListener('error', handleAudioError);
+                currentAudioElement.removeEventListener('pause', handleAudioPause);
+                
+                addMonitorLog(`❌ [ID: ${audioItem.id}] Erro ao reproduzir: ${error.type}`);
+                
+                // Skip to next after delay
+                setTimeout(() => {
+                    playNextAudioInQueue();
+                }, 300);
+            };
+            
+            const handleAudioPause = () => {
+                // Se foi pausado manualmente (não é fim de arquivo), ignorar
+                if (currentAudioElement.currentTime < currentAudioElement.duration - 0.1) {
+                    // Áudio foi pausado manualmente, não fazer nada
+                    return;
+                }
+            };
+            
+            // Remover listeners antigos para evitar duplicação
+            currentAudioElement.removeEventListener('ended', handleAudioEnded);
+            currentAudioElement.removeEventListener('error', handleAudioError);
+            currentAudioElement.removeEventListener('pause', handleAudioPause);
+            
+            // Add event listeners
+            currentAudioElement.addEventListener('ended', handleAudioEnded, { once: false });
+            currentAudioElement.addEventListener('error', handleAudioError, { once: false });
+            currentAudioElement.addEventListener('pause', handleAudioPause, { once: false });
+            
+            // Start playback
+            try {
+                const playPromise = currentAudioElement.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        addMonitorLog(`⚠️ [ID: ${audioItem.id}] Erro ao iniciar: ${error.message}`);
+                        handleAudioError(error);
+                    });
+                }
+            } catch (error) {
+                addMonitorLog(`❌ [ID: ${audioItem.id}] Exceção ao reproduzir: ${error.message}`);
+                handleAudioError(error);
+            }
+        }
+        
+        async function startFileMonitoring() {
+            const filePath = document.getElementById('file-monitor-path').value.trim();
+            const voice = document.getElementById('file-monitor-voice').value;
+            const useRandomVoice = document.getElementById('file-monitor-random-voice').checked;
+            const interval = parseInt(document.getElementById('file-monitor-interval').value);
+            const language = document.getElementById('file-monitor-language').value;
+            
+            if (!filePath) {
+                showStatus('file-monitor-status', '❌ Digite um caminho válido para o arquivo', 'error');
+                return;
+            }
+            
+            if (!voice && !useRandomVoice) {
+                showStatus('file-monitor-status', '❌ Selecione uma voz ou ative "Voz Aleatória"', 'error');
+                return;
+            }
+            
+            fileMonitorActive = true;
+            fileMonitorLastContent = '';
+            fileMonitorLineCount = 0;
+            audioPlaybackQueue = [];  // Clear queue
+            processedAudioIds = new Set();  // Reset processed IDs
+            audioIdCounter = 0;  // Reset audio ID counter
+            
+            document.getElementById('btn-start-monitor').style.display = 'none';
+            document.getElementById('btn-stop-monitor').style.display = 'block';
+            document.getElementById('file-monitor-path').disabled = true;
+            document.getElementById('file-monitor-voice').disabled = true;
+            document.getElementById('file-monitor-language').disabled = true;
+            document.getElementById('file-monitor-random-voice').disabled = true;
+            document.getElementById('file-monitor-interval').disabled = true;
+            
+            document.getElementById('monitor-file-name').textContent = filePath;
+            updateMonitorStatus('▶️ Monitorando');
+            addMonitorLog('🚀 Monitor iniciado');
+            addMonitorLog(`📄 Arquivo: ${filePath}`);
+            addMonitorLog(`🎤 Voz: ${useRandomVoice ? 'Aleatória' : voice}`);
+            addMonitorLog(`💬 Idioma: ${language}`);
+            addMonitorLog(`⏱️ Intervalo: ${interval}ms`);
+            addMonitorLog(`📋 Sistema de fila ativado - áudios reproduzem sequencialmente`);
+            
+            // First, read the file to get initial line count (we'll skip these)
+            try {
+                const initialResponse = await fetch(`${API_URL}/v1/monitor/read-file`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        file_path: filePath,
+                        last_line_count: 0
+                    })
+                });
+                
+                if (initialResponse.ok) {
+                    const initialData = await initialResponse.json();
+                    if (initialData.success) {
+                        // Set line count to current total so we only process NEW lines
+                        fileMonitorLineCount = initialData.total_lines;
+                        addMonitorLog(`📊 ${fileMonitorLineCount} linha(s) existente(s) - apenas NOVAS serão processadas`);
+                    }
+                }
+            } catch (error) {
+                addMonitorLog(`⚠️ Erro ao ler arquivo: ${error.message}`);
+            }
+            
+            showStatus('file-monitor-status', '✅ Monitor ativo - aguardando novas linhas', 'success');
+            
+            // Start monitoring loop
+            fileMonitorInterval = setInterval(async () => {
+                try {
+                    // Call backend endpoint to read file and get new lines
+                    const response = await fetch(`${API_URL}/v1/monitor/read-file`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            file_path: filePath,
+                            last_line_count: fileMonitorLineCount
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        addMonitorLog(`⚠️ Erro: ${data.error}`);
+                        return;
+                    }
+                    
+                    // Update counters
+                    const previousCount = fileMonitorLineCount;
+                    fileMonitorLineCount = data.total_lines;
+                    
+                    // Process new lines
+                    if (data.new_lines && data.new_lines.length > 0) {
+                        addMonitorLog(`✅ ${data.new_lines.length} nova(s) linha(s) detectada(s)`);
+                        
+                        for (const line of data.new_lines) {
+                            await processNewLine(line, voice, language);
+                        }
+                    } else {
+                        // Only show waiting message if there are no new lines
+                        if (previousCount === fileMonitorLineCount && fileMonitorLineCount > 0) {
+                            // Silent wait for new lines
+                        }
+                    }
+                    
+                } catch (error) {
+                    addMonitorLog(`⚠️ Erro: ${error.message}`);
+                    console.error('File monitoring error:', error);
+                }
+            }, interval);
+        }
+        
+        function stopFileMonitoring() {
+            fileMonitorActive = false;
+            
+            if (fileMonitorInterval) {
+                clearInterval(fileMonitorInterval);
+                fileMonitorInterval = null;
+            }
+            
+            // Clear audio queue and stop playback
+            if (currentAudioElement) {
+                currentAudioElement.pause();
+                currentAudioElement.currentTime = 0;
+            }
+            
+            // Pause ALL audio elements
+            const allAudios = document.querySelectorAll('#monitor-audio-list audio');
+            allAudios.forEach(audio => {
+                audio.pause();
+                audio.currentTime = 0;
+            });
+            
+            audioPlaybackQueue = [];
+            isPlayingAudio = false;
+            currentAudioElement = null;
+            
+            const queueStatus = document.getElementById('queue-status');
+            if (queueStatus) {
+                queueStatus.textContent = 'Fila: 0';
+            }
+            
+            document.getElementById('btn-start-monitor').style.display = 'block';
+            document.getElementById('btn-stop-monitor').style.display = 'none';
+            document.getElementById('file-monitor-path').disabled = false;
+            document.getElementById('file-monitor-voice').disabled = false;
+            document.getElementById('file-monitor-language').disabled = false;
+            document.getElementById('file-monitor-random-voice').disabled = false;
+            document.getElementById('file-monitor-interval').disabled = false;
+            
+            updateMonitorStatus('⏹ Parado');
+            addMonitorLog('⏹ Monitor parado - fila limpa');
+            showStatus('file-monitor-status', '⏹ Monitor parado', 'info');
+        }
+        
+        async function processNewLine(text, voice, language) {
+            if (!text || text.trim() === '') return;
+            
+            try {
+                addMonitorLog(`🔄 Processando: "${text.substring(0, 50)}..."`);
+                
+                // Use random voice if enabled
+                const selectedVoice = document.getElementById('file-monitor-random-voice').checked ? getRandomVoice() : voice;
+                
+                if (!selectedVoice) {
+                    addMonitorLog('❌ Nenhuma voz disponível');
+                    return;
+                }
+                
+                const formData = new FormData();
+                formData.append('text', text);
+                formData.append('language', language);
+                formData.append('voice', selectedVoice);
+                formData.append('speed', 1.0);
+                formData.append('temperature', 0.75);
+                formData.append('top_k', 50);
+                formData.append('top_p', 0.85);
+                formData.append('length_scale', 1.0);
+                formData.append('gpt_cond_len', 12);
+                
+                const response = await fetch(`${API_URL}/v1/synthesize`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    addMonitorLog(`❌ Erro na síntese: ${response.status}`);
+                    return;
+                }
+                
+                const audioBlob = await response.blob();
+                const audioUrl = URL.createObjectURL(audioBlob);
+                
+                // Create audio player card
+                const audioId = 'audio-' + (++audioIdCounter) + '-' + Date.now();
+                const audioCard = document.createElement('div');
+                audioCard.className = 'audio-card';
+                audioCard.style.cssText = `
+                    border: 1px solid rgba(102, 126, 234, 0.3);
+                    border-radius: 8px;
+                    padding: 12px;
+                    background: rgba(102, 126, 234, 0.1);
+                    transition: all 0.3s ease;
+                `;
+                
+                // Voice label
+                const voiceLabel = document.createElement('div');
+                voiceLabel.style.cssText = 'color: #667eea; font-size: 0.9em; font-weight: bold; margin-bottom: 6px;';
+                voiceLabel.textContent = `🔊 ${selectedVoice}`;
+                audioCard.appendChild(voiceLabel);
+                
+                // Text preview
+                const textLabel = document.createElement('div');
+                textLabel.style.cssText = 'color: #a0a0a0; font-size: 0.85em; word-break: break-all; margin-bottom: 10px;';
+                textLabel.textContent = `${text.substring(0, 100)}${text.length > 100 ? '...' : ''}`;
+                audioCard.appendChild(textLabel);
+                
+                // Audio player - CRITICAL: Must have controls enabled
+                const audioElement = document.createElement('audio');
+                audioElement.style.cssText = 'width: 100%; height: 40px; margin-bottom: 8px; display: block;';
+                audioElement.controls = true;
+                audioElement.controlsList = 'nodownload';
+                audioElement.preload = 'metadata';
+                audioElement.src = audioUrl;
+                audioCard.appendChild(audioElement);
+                
+                // Download button
+                const downloadBtn = document.createElement('button');
+                downloadBtn.type = 'button';
+                downloadBtn.textContent = '📥 Download';
+                downloadBtn.style.cssText = `
+                    padding: 8px 12px;
+                    background: #667eea;
+                    color: white;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-size: 0.85em;
+                    width: 100%;
+                    font-weight: 500;
+                    transition: background 0.2s ease;
+                `;
+                downloadBtn.onmouseover = () => downloadBtn.style.background = '#764ba2';
+                downloadBtn.onmouseout = () => downloadBtn.style.background = '#667eea';
+                downloadBtn.onclick = () => {
+                    const link = document.createElement('a');
+                    link.href = audioUrl;
+                    link.download = `sintetese-${audioId}.wav`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                };
+                audioCard.appendChild(downloadBtn);
+                
+                // Insert into DOM - remove empty state first
+                const audioList = document.getElementById('monitor-audio-list');
+                const emptyState = audioList.querySelector('[style*="text-align: center"]');
+                if (emptyState) {
+                    emptyState.remove();
+                }
+                audioList.insertBefore(audioCard, audioList.firstChild);
+                
+                fileMonitorLineCount++;
+                document.getElementById('monitor-lines-count').textContent = fileMonitorLineCount;
+                document.getElementById('monitor-last-line').textContent = text.substring(0, 100);
+                
+                addMonitorLog(`✅ Sintetizado com "${selectedVoice}" [ID: ${audioId}]`);
+                
+                // Add audio to playback queue
+                addAudioToQueue(audioElement, text, audioId);
+                
+            } catch (error) {
+                addMonitorLog(`❌ Erro: ${error.message}`);
+                console.error('Error in processNewLine:', error);
+            }
+        }
+        
+        // Populate voice selects
+        async function populateFileMonitorVoices() {
+            try {
+                const response = await fetch(`${API_URL}/v1/voices`);
+                const data = await response.json();
+                const voices = data.voices || [];
+                
+                const voiceSelect = document.getElementById('file-monitor-voice');
+                voiceSelect.innerHTML = '<option value="">-- Selecione uma voz --</option>';
+                
+                voices.forEach(voice => {
+                    const option = document.createElement('option');
+                    option.value = voice.id || voice.name;
+                    option.textContent = voice.name || voice.id;
+                    voiceSelect.appendChild(option);
+                });
+                
+                // Set first available voice as default
+                if (voiceSelect.options.length > 1) {
+                    voiceSelect.selectedIndex = 1;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar vozes para monitor:', error);
+            }
+        }
+        
+        // Initialize file monitor on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            populateFileMonitorVoices();
+            loadFileMonitorPath();
+            
+            // Auto-save file path when changed
+            document.getElementById('file-monitor-path').addEventListener('change', function() {
+                if (this.value.trim()) {
+                    saveFileMonitorPath(this.value.trim());
+                }
+            });
+        });
+        
+        // ====================================================================
+        
+        window.addEventListener('load', () => {
+            refreshDashboard();
+            loadGPUSettings();
+            populateFileMonitorVoices();
+            
+            // Registrar Service Worker para PWA
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registrado com sucesso:', registration.scope);
+                        // Verificar atualizações do SW
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    console.log('📦 Atualização do Service Worker disponível');
+                                    // Você pode avisar o usuário para recarregar
+                                }
+                            });
+                        });
+                    })
+                    .catch(error => console.warn('⚠️ Erro ao registrar Service Worker:', error));
+            }
+        });
+    </script>
+</body>
+</html>
