@@ -72,14 +72,41 @@ except ImportError as e:
     traceback.print_exc()
     sys.exit(1)
 
+try:
+    from engines import XTTSEngine, StyleTTS2Engine, EngineRegistry
+except ImportError as e:
+    print(f"❌ ERRO: Engines module não encontrado: {e}")
+    traceback.print_exc()
+    sys.exit(1)
+
+# ============================================================================
+# ENGINES REGISTRY & CONFIGURATION
+# ============================================================================
+
+# Available TTS Engines - registry maps engine names to classes
+ENGINES = {
+    "xtts-v2": XTTSEngine,
+    "stylets2": StyleTTS2Engine,
+}
+
+# Default engine (can be overridden via request parameter)
+DEFAULT_ENGINE = "xtts-v2"
+
+# Active engine instances (lazy-loaded on demand)
+active_engines: Dict[str, Any] = {}
+
+# Monitor engine selection (tracks which engine is selected for monitor-based synthesis)
+monitor_selected_engine: str = DEFAULT_ENGINE
+
 # ============================================================================
 # PYDANTIC MODELS
 # ============================================================================
 
 class FileMonitorRequest(BaseModel):
-    """Model for file monitoring requests"""
+    """Model for file monitoring requests with multi-engine support"""
     file_path: str
     last_line_count: int = 0
+    engine: str = DEFAULT_ENGINE  # Multi-engine support: "xtts-v2" or "stylets2"
 
 # ============================================================================
 # CONSTANTS & CONFIGURATION
@@ -447,14 +474,48 @@ async def serve_obs_audio():
 </html>"""
     return HTMLResponse(content=obs_html)
 
-# Global instances
-tts_model: Optional[Any] = None
+# Global instances - using the new multi-engine system
+# Note: tts_engine and tts_model are primarily for XTTS v2 (legacy)
+# For multi-engine support, use get_active_engine(engine_name) function
+tts_engine: Optional[XTTSEngine] = None  # Primary XTTS v2 engine instance
+tts_model: Optional[Any] = None  # Legacy reference (points to tts_engine.tts_model)
 voice_manager: Optional[VoiceManager] = None
 embedding_manager: Optional[SpeakerEmbeddingManager] = None
 
 # ============================================================================
 # STARTUP & SHUTDOWN
 # ============================================================================
+
+
+def get_active_engine(engine_name: Optional[str] = None) -> Any:
+    """
+    Get or initialize the active TTS engine.
+    
+    Args:
+        engine_name: Name of engine ("xtts-v2" or "stylets2")
+                    If None, uses DEFAULT_ENGINE
+    
+    Returns:
+        Initialized engine instance
+    """
+    if engine_name is None:
+        engine_name = DEFAULT_ENGINE
+    
+    if engine_name not in ENGINES:
+        raise ValueError(f"Unknown engine: {engine_name}. Available: {list(ENGINES.keys())}")
+    
+    # Return cached instance if already loaded
+    if engine_name in active_engines:
+        return active_engines[engine_name]
+    
+    # Load engine for the first time
+    print(f"⏳ Loading engine: {engine_name}")
+    engine_class = ENGINES[engine_name]
+    engine = engine_class()
+    engine.load_model()
+    active_engines[engine_name] = engine
+    
+    return engine
 
 
 def get_preferred_device() -> str:
@@ -478,70 +539,43 @@ def get_preferred_device() -> str:
 
 
 def initialize_tts_model(model_name: str = "tts_models/multilingual/multi-dataset/xtts_v2"):
-    """Initialize and return a TTS instance trying GPU first (if available) then falling back to CPU.
-
-    This function attempts to create the `TTS` object with `gpu=True` when a CUDA device
-    is present or requested. If initialization fails when requesting GPU it will retry on CPU.
-    It also attempts to move underlying model weights to the CUDA device when possible.
+    """Initialize TTS using the new XTTSEngine abstraction layer.
+    
+    This function is now a wrapper around get_active_engine() for backward compatibility.
+    The XTTSEngine handles all device selection, GPU fallback, and initialization logic.
     """
-    preferred = get_preferred_device()
-    use_gpu = True if preferred == "cuda" else False
-
-    print(f"⏱️ Preferred device: {preferred} (gpu flag: {use_gpu})")
-
-    # Try to initialize with preferred device, and fall back to CPU on failure
+    global tts_engine
+    
     try:
-        tts_inst = TTS(model_name=model_name, gpu=use_gpu, progress_bar=True)
-        print(f"✅ TTS initialized with gpu={use_gpu}")
-
-        # If we asked for GPU and CUDA is available, attempt to move underlying PyTorch modules
-        if use_gpu and torch.cuda.is_available():
-            try:
-                cuda_dev = torch.device("cuda")
-                # Try common attribute names where the underlying model may live
-                for attr in ("model", "tts_model", "model_module", "net_g"):
-                    if hasattr(tts_inst, attr):
-                        mod = getattr(tts_inst, attr)
-                        if hasattr(mod, "to"):
-                            try:
-                                mod.to(cuda_dev)
-                                print(f"✅ Moved '{attr}' to CUDA device")
-                            except Exception:
-                                pass
-                # Some wrappers keep the underlying model in a `.model` attribute
-                if hasattr(tts_inst, "model") and hasattr(tts_inst.model, "to"):
-                    try:
-                        tts_inst.model.to(cuda_dev)
-                    except Exception:
-                        pass
-            except Exception:
-                print("⚠️ Falha ao mover pesos para CUDA — continuando mesmo assim")
-
-        return tts_inst
-
-    except Exception as e:
-        print(f"⚠️ Inicialização TTS com gpu={use_gpu} falhou: {e}")
-        traceback.print_exc()
-        if use_gpu:
-            print("🔁 Tentando inicializar TTS no CPU como fallback...")
-            try:
-                tts_inst = TTS(model_name=model_name, gpu=False, progress_bar=True)
-                print("✅ TTS inicializado no CPU com sucesso")
-                return tts_inst
-            except Exception as e2:
-                print(f"❌ Falha ao inicializar TTS no CPU também: {e2}")
-                traceback.print_exc()
-                raise
+        print("⏳ Inicializando XTTS v2 via Engine Registry...")
+        
+        # Get or initialize XTTS v2 engine
+        tts_engine = get_active_engine("xtts-v2")
+        
+        if tts_engine is None:
+            raise RuntimeError("Failed to initialize TTS engine")
+        
+        print(f"✅ XTTS v2 Engine inicializado com sucesso")
+        
+        # For backward compatibility, return the XTTSEngine instance which has tts_model
+        # (Other code expects to call tts_model.tts(...))
+        if hasattr(tts_engine, 'tts_model'):
+            return tts_engine.tts_model
         else:
-            # If we already tried CPU, re-raise
-            raise
+            # If it's not an XTTSEngine, return the engine itself
+            return tts_engine
+        
+    except Exception as e:
+        print(f"❌ Erro ao inicializar TTS Engine: {e}")
+        traceback.print_exc()
+        raise
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize TTS model, voice manager, and embedding manager on startup."""
-    global tts_model, voice_manager, embedding_manager
+    """Initialize TTS engine, voice manager, and embedding manager on startup."""
+    global tts_engine, tts_model, voice_manager, embedding_manager
     
-    print("🚀 Starting XTTS v2 Server...")
+    print("🚀 Starting XTTS v2 Server with Multi-Engine Support...")
     print(f"🖥️  Device: {torch.device('cuda' if torch.cuda.is_available() else 'cpu')}")
     
     # Debug: List all registered routes
@@ -553,10 +587,10 @@ async def startup_event():
     print()
     
     try:
-        # Initialize TTS model
-        print("⏳ Loading XTTS v2 model (this may take a moment)...")
+        # Initialize TTS engine
+        print("⏳ Loading XTTS v2 engine (this may take a moment)...")
         tts_model = initialize_tts_model("tts_models/multilingual/multi-dataset/xtts_v2")
-        print(f"✅ XTTS v2 model loaded successfully - Type: {type(tts_model)}, ID: {id(tts_model)}")
+        print(f"✅ XTTS v2 engine loaded successfully")
         
         # Initialize voice manager
         try:
@@ -568,11 +602,11 @@ async def startup_event():
         
         # Initialize embedding manager
         try:
-            if tts_model:
-                embedding_manager = SpeakerEmbeddingManager(tts_model)
+            if tts_engine:
+                embedding_manager = SpeakerEmbeddingManager(tts_engine.tts_model)
                 print("✅ Speaker Embedding Manager initialized")
             else:
-                print("⚠️ Skipping Embedding Manager (TTS model not loaded)")
+                print("⚠️ Skipping Embedding Manager (TTS engine not loaded)")
                 embedding_manager = None
         except Exception as e:
             print(f"⚠️ Embedding Manager initialization warning: {str(e)}")
@@ -596,9 +630,18 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     """Clean up resources on shutdown."""
+    global tts_engine
+    
     print("🛑 Shutting down XTTS v2 Server...")
-    if tts_model:
-        print("✅ Server shutdown complete")
+    
+    if tts_engine:
+        try:
+            tts_engine.unload_model()
+            print("✅ TTS engine unloaded")
+        except Exception as e:
+            print(f"⚠️ Error unloading engine: {e}")
+    
+    print("✅ Server shutdown complete")
 
 # ============================================================================
 # HEALTH & INFO ENDPOINTS
@@ -828,6 +871,77 @@ async def get_synthesis_config():
         }
     }
 
+@app.get("/v1/engines")
+async def get_available_engines():
+    """
+    Get list of available TTS engines with their specifications.
+    
+    Returns:
+        JSON object with available engines, current engine, and detailed specifications
+    """
+    print(f"\n🎤 GET /v1/engines called")
+    
+    engines_info = {
+        "available": list(ENGINES.keys()),
+        "current": DEFAULT_ENGINE,
+        "engines": {
+            "xtts-v2": {
+                "label": "XTTS v2 (Default)",
+                "description": "High-quality multilingual TTS with excellent voice cloning",
+                "languages": 16,
+                "speed": "medium",
+                "quality": "excellent",
+                "vram_mb": 6000,
+                "estimated_time_per_sentence": "15-20s",
+                "features": [
+                    "16 languages support",
+                    "Excellent quality",
+                    "Voice cloning",
+                    "Gpt-conditioning"
+                ],
+                "pros": [
+                    "Best audio quality",
+                    "Excellent multilingual support",
+                    "Strong voice cloning"
+                ],
+                "cons": [
+                    "Slower synthesis (15-20s)",
+                    "Higher GPU memory (6GB)"
+                ]
+            },
+            "stylets2": {
+                "label": "StyleTTS2 (Fast)",
+                "description": "Fast multilingual TTS with near-human quality and low latency",
+                "languages": 11,
+                "speed": "very-fast",
+                "quality": "excellent",
+                "vram_mb": 2000,
+                "estimated_time_per_sentence": "5-7s",
+                "features": [
+                    "11 languages support (PT-BR included)",
+                    "Near-human quality",
+                    "Voice cloning",
+                    "Low VRAM requirement"
+                ],
+                "pros": [
+                    "2-3x faster synthesis",
+                    "Lower GPU memory (2GB)",
+                    "Near-human quality",
+                    "Optimized for Portuguese"
+                ],
+                "cons": [
+                    "Slightly fewer languages",
+                    "Newer engine (less tested)"
+                ]
+            }
+        }
+    }
+    
+    print(f"   Available engines: {engines_info['available']}")
+    print(f"   Current engine: {engines_info['current']}")
+    
+    return engines_info
+
 @app.post("/v1/gpu-settings")
 async def update_gpu_settings(
     memory_fraction: float = Form(None),
@@ -906,18 +1020,27 @@ async def update_gpu_settings(
 # TTS ENDPOINTS
 # ============================================================================
 
-def _do_synthesis(text, language, voice, speed, temperature, top_k, top_p, length_scale, gpt_cond_len):
+def _do_synthesis(text, language, voice, speed, temperature, top_k, top_p, length_scale, gpt_cond_len, engine=None):
     """
     Helper function to perform TTS synthesis (runs in thread pool to avoid blocking)
     Includes robust CUDA error handling with automatic fallback to CPU
+    Supports multiple engines (XTTS v2, StyleTTS2, etc)
     """
+    if engine is None:
+        engine = DEFAULT_ENGINE
+    
     retry_count = 0
     max_retries = 2
     last_error = None
     
     while retry_count < max_retries:
         try:
-            # Check if TTS model is loaded
+            # Get the active engine instance
+            active_engine = get_active_engine(engine)
+            if not active_engine:
+                raise RuntimeError(f"Failed to load engine: {engine}")
+            
+            # Check if TTS model is loaded (for backward compatibility)
             if not tts_model:
                 raise RuntimeError("TTS model not loaded!")
             
@@ -1063,10 +1186,12 @@ async def synthesize_tts(
     top_k: int = Form(50),
     top_p: float = Form(0.85),
     length_scale: float = Form(1.0),
-    gpt_cond_len: float = Form(12.0)
+    gpt_cond_len: float = Form(12.0),
+    engine: str = Form(DEFAULT_ENGINE)
 ):
     """
     Synthesize speech from text using specified voice and language.
+    Supports multiple TTS engines (XTTS v2, StyleTTS2, etc).
     
     Args:
         text: Text to synthesize
@@ -1078,16 +1203,18 @@ async def synthesize_tts(
         top_p: Cumulative probability (0.0 to 1.0)
         length_scale: Phoneme duration multiplier (0.5 to 2.0)
         gpt_cond_len: GPT conditioning length in seconds (3 to 30, default 12)
+        engine: TTS engine to use ('xtts-v2' or 'stylets2'), default from DEFAULT_ENGINE
     
     Returns:
         WAV audio file
     """
     print(f"\n🎤 POST /v1/synthesize called")
     print(f"   text={text[:50]}..., language={language}, voice={voice}")
-    print(f"   config: speed={speed}x, temp={temperature}, top_k={top_k}, top_p={top_p}, length_scale={length_scale}")
+    print(f"   engine={engine}, config: speed={speed}x, temp={temperature}, top_k={top_k}, top_p={top_p}, length_scale={length_scale}")
     print(f"   conditioning: gpt_cond_len={gpt_cond_len}s")
     print(f"   GPU: memory={GPU_OPTIMIZATIONS['memory_fraction']*100:.0f}%, FP16={GPU_OPTIMIZATIONS['use_half_precision']}, cache={GPU_OPTIMIZATIONS['enable_model_cache']}")
-    print(f"   tts_model={type(tts_model).__name__}, voice_manager={type(voice_manager).__name__}")
+    if tts_model:
+        print(f"   tts_model={type(tts_model).__name__}, voice_manager={type(voice_manager).__name__}")
     
     try:
         # Validate inputs
@@ -1119,7 +1246,8 @@ async def synthesize_tts(
             top_k,
             top_p,
             length_scale,
-            gpt_cond_len
+            gpt_cond_len,
+            engine
         )
         
         # Enviar áudio para OBS se houver conexões
@@ -1785,10 +1913,11 @@ file_monitor_state = {}
 @app.post("/v1/monitor/read-file")
 async def monitor_read_file(request: FileMonitorRequest):
     """
-    Read file and return new lines since last read
+    Read file and return new lines since last read.
+    Supports multi-engine TTS selection for automatic synthesis.
     
     Args:
-        request: FileMonitorRequest with file_path and last_line_count
+        request: FileMonitorRequest with file_path, last_line_count, and optional engine selection
         
     Returns:
         {
@@ -1857,11 +1986,12 @@ async def monitor_read_file(request: FileMonitorRequest):
 @app.post("/v1/monitor/process-queue")
 async def process_queued_text(request: FileMonitorRequest):
     """
-    Processar novo texto da fila de monitoramento de arquivo.
+    Processar novo texto da fila de monitoramento de arquivo com suporte multi-engine.
     Garante que múltiplos textos sejam processados sequencialmente.
+    Engine selecionado é usado para síntese automática do texto monitorado.
     
     Args:
-        request: FileMonitorRequest com file_path e last_line_count
+        request: FileMonitorRequest com file_path, last_line_count, e engine selecionado
         
     Returns:
         {
@@ -1946,6 +2076,65 @@ async def process_queued_text(request: FileMonitorRequest):
     result["queue_size"] = len(queue)
     
     return result
+
+@app.post("/v1/monitor/select-engine")
+async def monitor_select_engine(engine: str = Form(DEFAULT_ENGINE)):
+    """
+    Selecionar TTS engine para síntese automática do monitor.
+    O engine selecionado será usado para todas as sínteses via /v1/monitor/process-queue.
+    
+    Args:
+        engine: Nome do engine ("xtts-v2" ou "stylets2")
+    
+    Returns:
+        {
+            "success": bool,
+            "selected_engine": str,
+            "available_engines": List[str],
+            "message": str
+        }
+    """
+    global monitor_selected_engine
+    
+    print(f"\n🎤 POST /v1/monitor/select-engine called")
+    print(f"   Requested engine: {engine}")
+    
+    # Validar engine
+    if engine not in ENGINES:
+        print(f"   ❌ Invalid engine: {engine}")
+        return {
+            "success": False,
+            "selected_engine": monitor_selected_engine,
+            "available_engines": list(ENGINES.keys()),
+            "message": f"Unknown engine: {engine}. Available: {list(ENGINES.keys())}"
+        }
+    
+    # Atualizar engine selecionado
+    monitor_selected_engine = engine
+    print(f"   ✅ Monitor engine changed to: {engine}")
+    
+    return {
+        "success": True,
+        "selected_engine": monitor_selected_engine,
+        "available_engines": list(ENGINES.keys()),
+        "message": f"Monitor engine set to {engine}"
+    }
+
+@app.get("/v1/monitor/status")
+async def monitor_get_status():
+    """
+    Obter status atual do monitor de arquivo.
+    
+    Returns:
+        {
+            "selected_engine": str,
+            "available_engines": List[str]
+        }
+    """
+    return {
+        "selected_engine": monitor_selected_engine,
+        "available_engines": list(ENGINES.keys())
+    }
 
 # ============================================================================
 # OBS AUDIO STREAMING

@@ -1,0 +1,19 @@
+# StyleTTS2 - Fast & High-Quality TTS Engine
+# Install with: pip install -r requirements-styletts2.txt
+
+# Core StyleTTS2
+styletts2==0.1.6
+
+# Dependencies (should be already installed, but ensuring)
+torch>=2.0.0
+torchaudio>=2.0.0
+numpy>=1.20.0
+
+# For MIT-licensed phonemizer support
+gruut>=0.5.1
+
+# HuggingFace transformers (for pre-trained models)
+transformers>=4.20.0
+
+# Additional utilities
+scipy>=1.7.0

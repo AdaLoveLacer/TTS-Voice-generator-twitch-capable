@@ -668,6 +668,21 @@
                                 <label for="tts-voice">Voz:</label>
                                 <select id="tts-voice"></select>
                             </div>
+
+                            <!-- ENGINE SELECTION -->
+                            <div class="form-group">
+                                <label for="tts-engine">🎤 Motor TTS:</label>
+                                <select id="tts-engine">
+                                    <option value="xtts-v2">⭐ XTTS v2 (Padrão - Alta Qualidade)</option>
+                                    <option value="stylets2">⚡ StyleTTS2 (Rápido - 2-3x Mais Veloz)</option>
+                                </select>
+                                <small id="engine-description" style="display: block; margin-top: 5px; color: #888;">
+                                    Selecione o motor TTS: XTTS v2 oferece máxima qualidade, StyleTTS2 é 2-3x mais rápido
+                                </small>
+                                <div id="engine-status" style="margin-top: 8px; padding: 8px; background: #f0f0f0; border-radius: 4px; font-size: 0.9em; color: #666; display: none;">
+                                    Status: <span id="engine-status-text">-</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -1345,6 +1360,7 @@ GET /v1/info
         
         const CONFIG_STORAGE_KEY = 'speakerbot_synthesis_config';
         const CLONE_CONFIG_STORAGE_KEY = 'speakerbot_clone_config';
+        const ENGINE_STORAGE_KEY = 'speakerbot_tts_engine';  // NEW: Engine selection persistence
         
         // Save configuration to localStorage
         function saveConfig() {
@@ -1496,9 +1512,81 @@ GET /v1/info
             if (confirm('Tem certeza que deseja limpar todas as configurações salvas?')) {
                 localStorage.removeItem(CONFIG_STORAGE_KEY);
                 localStorage.removeItem(CLONE_CONFIG_STORAGE_KEY);
+                localStorage.removeItem(ENGINE_STORAGE_KEY);  // NEW: Also clear engine selection
                 updateConfigIndicator();
                 console.log('✅ All configurations cleared');
                 alert('Configurações limpas com sucesso!');
+            }
+        }
+        
+        // NEW: Update engine description and status based on selection
+        function updateEngineDescription() {
+            const engineSelect = document.getElementById('tts-engine');
+            const descriptionDiv = document.getElementById('engine-description');
+            const statusDiv = document.getElementById('engine-status');
+            
+            if (!engineSelect) return;
+            
+            const engine = engineSelect.value;
+            let description = '';
+            let statusText = '';
+            
+            if (engine === 'xtts-v2') {
+                description = '⭐ XTTS v2: Máxima qualidade de voz, suporta 16 idiomas. Requer ~6GB VRAM. Síntese leva 15-20 segundos.';
+                statusText = '⭐ XTTS v2 (Alta Qualidade)';
+            } else if (engine === 'stylets2') {
+                description = '⚡ StyleTTS2: Síntese 2-3x mais rápida, qualidade próxima ao humano, suporta 11 idiomas. Requer ~2GB VRAM. Síntese leva 5-7 segundos.';
+                statusText = '⚡ StyleTTS2 (Rápido)';
+            }
+            
+            if (descriptionDiv) {
+                descriptionDiv.textContent = description;
+            }
+            
+            if (statusDiv) {
+                const statusText_elem = statusDiv.querySelector('#engine-status-text');
+                if (statusText_elem) {
+                    statusText_elem.textContent = statusText;
+                    statusDiv.style.display = 'block';
+                }
+            }
+        }
+        
+        // NEW: Setup listener for engine changes
+        function setupEngineDescriptionListener() {
+            const engineSelect = document.getElementById('tts-engine');
+            if (engineSelect) {
+                engineSelect.addEventListener('change', function() {
+                    updateEngineDescription();
+                    saveEngineSelection();
+                });
+            }
+        }
+        
+        // NEW: Save TTS engine selection to localStorage
+        function saveEngineSelection() {
+            try {
+                const engine = document.getElementById('tts-engine')?.value || 'xtts-v2';
+                localStorage.setItem(ENGINE_STORAGE_KEY, engine);
+                console.log('✅ Engine selection saved to localStorage:', engine);
+            } catch (error) {
+                console.error('Error saving engine selection:', error);
+            }
+        }
+        
+        // NEW: Load TTS engine selection from localStorage
+        function loadEngineSelection() {
+            try {
+                const savedEngine = localStorage.getItem(ENGINE_STORAGE_KEY) || 'xtts-v2';
+                const engineSelect = document.getElementById('tts-engine');
+                if (engineSelect) {
+                    engineSelect.value = savedEngine;
+                    console.log('✅ Engine selection restored from localStorage:', savedEngine);
+                }
+                return true;
+            } catch (error) {
+                console.error('Error loading engine selection:', error);
+                return false;
             }
         }
         
@@ -1509,6 +1597,9 @@ GET /v1/info
                 loadCloneConfig();
                 updateConfigIndicator();
                 initCustomPresets();
+                loadEngineSelection();  // NEW: Load saved engine preference
+                updateEngineDescription();  // NEW: Update engine description on load
+                setupEngineDescriptionListener();  // NEW: Setup listener for engine changes
                 console.log('🔄 User configurations and custom presets loaded from localStorage');
             }, 500);
         });
@@ -1518,6 +1609,9 @@ GET /v1/info
             // Save on any input/select change
             saveConfig();
             saveCloneConfig();
+            if (event.target.id === 'tts-engine') {
+                saveEngineSelection();  // NEW: Save engine preference
+            }
         });
         
         // ====================================================================
@@ -1699,6 +1793,7 @@ GET /v1/info
             const text = document.getElementById('tts-text').value;
             const language = document.getElementById('tts-language').value;
             const voice = document.getElementById('tts-voice').value;
+            const engine = document.getElementById('tts-engine').value;  // NEW: Get selected engine
             
             // Get synthesis configuration parameters
             const speed = parseFloat(document.getElementById('tts-speed').value);
@@ -1708,13 +1803,14 @@ GET /v1/info
             const length_scale = parseFloat(document.getElementById('tts-length-scale').value);
             const gpt_cond_len = parseFloat(document.getElementById('tts-gpt-cond-len').value);
             
-            showStatus('tts-status', 'Sintetizando...', 'loading');
+            showStatus('tts-status', `Sintetizando com ${engine}...`, 'loading');
             
             try {
                 const formData = new FormData();
                 formData.append('text', text);
                 formData.append('language', language);
                 formData.append('voice', voice);
+                formData.append('engine', engine);  // NEW: Pass engine to backend
                 formData.append('speed', speed);
                 formData.append('temperature', temperature);
                 formData.append('top_k', top_k);
@@ -1750,6 +1846,7 @@ GET /v1/info
             
             const text = document.getElementById('clone-text').value;
             const language = document.getElementById('clone-language').value;
+            const engine = document.getElementById('tts-engine').value;  // NEW: Get selected engine
             const wavFiles = document.getElementById('clone-wav').files;
             
             if (wavFiles.length === 0) {
@@ -1770,12 +1867,13 @@ GET /v1/info
             const length_scale = parseFloat(document.getElementById('clone-length-scale').value);
             const gpt_cond_len = parseFloat(document.getElementById('tts-gpt-cond-len').value);
             
-            showStatus('clone-status', `Clonando voz (${wavFiles.length} referência(s)) e sintetizando...`, 'loading');
+            showStatus('clone-status', `Clonando voz (${wavFiles.length} referência(s)) e sintetizando com ${engine}...`, 'loading');
             
             try {
                 const formData = new FormData();
                 formData.append('text', text);
                 formData.append('language', language);
+                formData.append('engine', engine);  // NEW: Pass engine to backend
                 
                 // Add all speaker files (backend accepts both speaker_wav and speaker_wavs)
                 if (wavFiles.length === 1) {
