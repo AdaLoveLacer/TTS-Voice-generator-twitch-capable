@@ -105,6 +105,28 @@ function Create-Release {
         'create_default_voices.py'
     )
     
+    # Criar diretório engines
+    $enginesDir = Join-Path $ReleaseDir "xtts-server\engines"
+    New-Item -ItemType Directory -Path $enginesDir -Force | Out-Null
+    
+    # Arquivos engines (Phase 4 - Multi-Engine)
+    $engineFiles = @(
+        '__init__.py',
+        'base_engine.py',
+        'xttts_engine.py',
+        'stylets2_engine.py'
+    )
+    
+    $enginesSourcePath = Join-Path $serverDir 'engines'
+    foreach ($file in $engineFiles) {
+        $sourcePath = Join-Path $enginesSourcePath $file
+        if (Test-Path $sourcePath) {
+            $destPath = Join-Path $enginesDir $file
+            Copy-Item -Path $sourcePath -Destination $destPath -Force -ErrorAction SilentlyContinue
+            Write-Status "Copiado: xtts-server/engines/$file" Success
+        }
+    }
+    
     $serverDir = Join-Path (Get-Location) 'xtts-server'
     foreach ($file in $serverFiles) {
         $sourcePath = Join-Path $serverDir $file
@@ -200,6 +222,34 @@ function Create-Release {
         }
     } else {
         Write-Status "Pasta de presets não encontrada: $presetsSourcePath" Warn
+    }
+    
+    # Copiar documentação Phase 4 (Multi-Engine)
+    Write-Status "Copiando documentação Phase 4..." Process
+    $docsSourcePath = Join-Path (Get-Location) 'docs\phase-4-1'
+    $docsDestPath = Join-Path $ReleaseDir 'docs\phase-4-1'
+    
+    if (Test-Path $docsSourcePath) {
+        New-Item -ItemType Directory -Path $docsDestPath -Force | Out-Null
+        $docFiles = @(Get-ChildItem -Path $docsSourcePath -Recurse -File -ErrorAction SilentlyContinue)
+        if ($docFiles.Count -gt 0) {
+            foreach ($docFile in $docFiles) {
+                $relativePath = $docFile.FullName.Substring($docsSourcePath.Length + 1)
+                $destFile = Join-Path $docsDestPath $relativePath
+                $destFileDir = Split-Path -Parent $destFile
+                
+                if (-not (Test-Path $destFileDir)) {
+                    New-Item -ItemType Directory -Path $destFileDir -Force | Out-Null
+                }
+                
+                Copy-Item -Path $docFile.FullName -Destination $destFile -Force
+            }
+            Write-Status "Documentação Phase 4 copiada ($($docFiles.Count) arquivos)" Success
+        } else {
+            Write-Status "Nenhum arquivo de documentação encontrado" Warn
+        }
+    } else {
+        Write-Status "Pasta de documentação não encontrada: $docsSourcePath" Warn
     }
     
     # Gerar README
