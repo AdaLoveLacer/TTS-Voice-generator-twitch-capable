@@ -1,0 +1,77 @@
+# Python virtual environment
+venv/
+.venv/
+env/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# pip cache
+.pip-cache/
+*.whl
+pip-log.txt
+pip-delete-this-directory.txt
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+.history/
+.ionide/
+*.code-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+.AppleDouble
+
+# Temporary/Build files
+*.tmp
+*.bak
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.mypy_cache/
+
+# Local voices/embeddings (but keep structure)
+# (Comentado para permitir vozes customizadas)
+# voices/custom/*
+# !voices/custom/.gitkeep
+# voices/embeddings/*
+# !voices/embeddings/.gitkeep
+
+# Local cache
+.cache/
+*.cache
+
+# Config files (keep examples only)
+config/*.local.json
+config/local-*.json
+
+# Environment
+# (Comentado para permitir .env no repo se necessário)
+# .env
+# .env.local
+# .env.*.local
+
+# Diagnostic output
+diagnose-*.log
+cpu-usage-*.log

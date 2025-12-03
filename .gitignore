@@ -19,15 +19,18 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Virtual Environment
 venv/
 env/
 ENV/
-.venv
+.venv/
+xtts-server/venv/
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
@@ -35,20 +38,19 @@ ENV/
 .DS_Store
 *.sublime-project
 *.sublime-workspace
+.vscode-server/
+.history/
+.ionide/
 
 # Continue/Copilot
 .continue/
 
 # Temporary files
 *.tmp
-*.log
-*.pid
-build.log
-server-startup.log
-*.tmp.*
-.pytest_cache/
-.coverage
-htmlcov/
+*.bak
+*.backup
+*~
+.~*
 
 # Cache
 .pip-cache/
@@ -60,6 +62,7 @@ pip-cache/
 xtts-server/.cache/
 xtts-server/__pycache__/
 *.cache
+*.pyc
 
 # Node/npm (se houver)
 node_modules/
@@ -67,37 +70,63 @@ npm-debug.log
 yarn-error.log
 
 # Environment variables
-.env
-.env.local
-.env.*.local
+# (Comentado para permitir .env no repo se necessário)
+# .env
+# .env.local
+# .env.*.local
 
 # OS
 Thumbs.db
 .AppleDouble
 .LSOverride
-*.swp
-*.swo
 
 # Project specific
 test_monitor.txt
 mensagens.txt
 run-debug.bat
+OBS_AUDIO_SETUP.html
+*.ino
 
 # Releases (manter apenas no local)
 Releases/
 *.7z
-*.zip (respeitar releases oficiais)
+*.zip
 
 # Voice data (local only)
-xtts-server/voices/custom/*
-!xtts-server/voices/custom/.gitkeep
-xtts-server/voices/embeddings/*
-!xtts-server/voices/embeddings/.gitkeep
+# (Comentado para permitir vozes customizadas no repo)
+# xtts-server/voices/custom/*
+# !xtts-server/voices/custom/.gitkeep
+# xtts-server/voices/embeddings/*
+# !xtts-server/voices/embeddings/.gitkeep
 
 # Config local
 config/
 *.config.json
 config.local.json
+
+# Build/Installation artifacts
+xtts-server/req-no-tts-*.txt
+*.whl
+xtts-server/*.egg-info/
+xtts-server/__pycache__/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# pyenv
+.python-version
+
+# Testing/Profiling
+.flake8
+.pylint
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.prof
+
+# Linting
+*.ruff_cache/
 
 # Model cache (pode ser muito grande)
 models/
