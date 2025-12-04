@@ -1,0 +1,276 @@
+[H[2J[3J[0;34m
+╔════════════════════════════════════════════════════════════════════╗
+║        🚀 TTS VOICE GENERATOR - SETUP AUTOMÁTICO + SERVIDOR 🚀    ║
+╚════════════════════════════════════════════════════════════════════╝
+[0m
+
+[0;32mIniciando setup automático...[0m
+
+
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;32m[*] 1/5 Validando Ambiente[0m
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;32m✓ Python 3 encontrado: Python 3.11.14[0m
+[0;32m✓ Python 3.11 encontrado[0m
+
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;32m[*] 2/5 Configurando Ambiente Virtual[0m
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;32m✓ Ambiente virtual já existe[0m
+[0;32m✓ Ambiente virtual ativado[0m
+
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;32m[*] 3/5 Instalando Gerenciador de Pacotes (pip)[0m
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;32m✓ pip já disponível[0m
+Atualizando pip, setuptools e wheel...
+Requirement already satisfied: setuptools in ./venv/lib/python3.11/site-packages (80.9.0)
+Requirement already satisfied: wheel in ./venv/lib/python3.11/site-packages (0.45.1)
+
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;32m[*] 4/5 Instalando Dependências[0m
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+Verificando dependências já instaladas...
+[0;32m✓ ✓ numpy já instalado[0m
+[0;32m✓ ✓ torch já instalado[0m
+[0;32m✓ ✓ librosa já instalado[0m
+[0;32m✓ ✓ soundfile já instalado[0m
+[0;32m✓ ✓ TTS já instalado[0m
+[1;33m[!] ⚠ styletts2 não encontrado (opcional - servidor ainda funciona)[0m
+[0;32m✓ Todas as dependências já estão instaladas[0m
+
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;32m[*] 5/5 Iniciando Servidor[0m
+[0;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+Verificando pré-requisitos...
+[0;32m✓ Pré-requisitos OK[0m
+
+[0;36mIniciando servidor XTTS...[0m
+[1;33m(Pressione CTRL+C para parar)[0m
+
+/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/jieba/_compat.py:18: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/xtts-server/main.py:595: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/xtts-server/main.py:652: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("shutdown")
+INFO:     Started server process [1324303]
+INFO:     Waiting for application startup.
+/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/api.py:70: UserWarning: `gpu` will be deprecated. Please use `tts.to(device)` instead.
+  warnings.warn("`gpu` will be deprecated. Please use `tts.to(device)` instead.")
+⚠ StyleTTS2 não encontrado: No module named 'styletts2'
+   StyleTTS2 é opcional. Use: pip install styletts2
+⚠ StyleTTS2 não disponível: cannot import name 'StyleTTS2Engine' from 'engines.stylets2_engine' (/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/xtts-server/engines/stylets2_engine.py)
+======================================================================
+🎙️  XTTS v2 Server with Voice Cloning
+======================================================================
+📍 Server: http://127.0.0.1:8877
+📚 Docs: http://127.0.0.1:8877/docs
+💬 Info: http://127.0.0.1:8877/v1/info
+======================================================================
+🚀 Starting XTTS v2 Server with Multi-Engine Support...
+🖥️  Device: cuda
+
+📋 Registered routes:
+  APIRoute(path='/health', name='health_check', methods=['GET'])
+  APIRoute(path='/v1/info', name='get_info', methods=['GET'])
+  APIRoute(path='/v1/synthesis-config', name='get_synthesis_config', methods=['GET'])
+  APIRoute(path='/v1/engines', name='get_available_engines', methods=['GET'])
+  APIRoute(path='/v1/gpu-settings', name='update_gpu_settings', methods=['POST'])
+  APIRoute(path='/v1/synthesize', name='synthesize_tts', methods=['POST'])
+  APIRoute(path='/v1/clone-voice', name='clone_voice', methods=['POST'])
+  APIRoute(path='/v1/voices/upload', name='upload_voice', methods=['POST'])
+  APIRoute(path='/v1/voices', name='list_voices', methods=['GET'])
+  APIRoute(path='/v1/voices/{voice_id}', name='get_voice', methods=['GET'])
+  APIRoute(path='/v1/voices/{voice_id}', name='delete_voice', methods=['DELETE'])
+  APIRoute(path='/v1/batch-synthesize', name='batch_synthesize', methods=['POST'])
+  APIRoute(path='/v1/precompute-embeddings', name='precompute_embeddings', methods=['POST'])
+  APIRoute(path='/v1/monitor/read-file', name='monitor_read_file', methods=['POST'])
+  APIRoute(path='/v1/monitor/process-queue', name='process_queued_text', methods=['POST'])
+  APIRoute(path='/v1/monitor/select-engine', name='monitor_select_engine', methods=['POST'])
+  APIRoute(path='/v1/monitor/status', name='monitor_get_status', methods=['GET'])
+  APIRoute(path='/v1/queue/status', name='get_queue_status', methods=['GET'])
+  APIRoute(path='/v1/queue/clear', name='clear_queue', methods=['POST'])
+  APIRoute(path='/v1/queue/wait', name='wait_queue_completion', methods=['GET'])
+
+⏳ Loading XTTS v2 engine (this may take a moment)...
+⏳ Inicializando XTTS v2 via Engine Registry...
+⏳ Loading engine: xtts-v2
+⏳ Carregando modelo XTTS v2 (cuda)...
+ > tts_models/multilingual/multi-dataset/xtts_v2 has been updated, clearing model cache...
+ > You must confirm the following:
+ | > "I have purchased a commercial license from Coqui: licensing@coqui.ai"
+ | > "Otherwise, I agree to the terms of the non-commercial CPML: https://coqui.ai/cpml" - [y/n]
+ | | >  > Downloading model to /home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/xtts-server/.tts-cache/styletts2/tts/tts_models--multilingual--multi-dataset--xtts_v2
+  0%|          | 0.00/1.87G [00:00<?, ?iB/s]  0%|          | 475k/1.87G [00:00<06:33, 4.74MiB/s]  0%|          | 2.26M/1.87G [00:00<02:32, 12.3MiB/s]  0%|          | 7.50M/1.87G [00:00<01:01, 30.5MiB/s]  1%|          | 11.8M/1.87G [00:00<00:52, 35.5MiB/s]  1%|          | 20.5M/1.87G [00:00<00:34, 53.8MiB/s]  2%|▏         | 30.1M/1.87G [00:00<00:27, 67.9MiB/s]  2%|▏         | 37.8M/1.87G [00:00<00:25, 71.0MiB/s]  2%|▏         | 44.9M/1.87G [00:00<00:29, 62.8MiB/s]  3%|▎         | 57.7M/1.87G [00:00<00:22, 81.4MiB/s]  4%|▎         | 68.9M/1.87G [00:01<00:19, 90.2MiB/s]  4%|▍         | 80.7M/1.87G [00:01<00:18, 98.4MiB/s]  5%|▍         | 92.4M/1.87G [00:01<00:17, 104MiB/s]   6%|▌         | 104M/1.87G [00:01<00:16, 108MiB/s]   6%|▌         | 116M/1.87G [00:01<00:15, 110MiB/s]  7%|▋         | 127M/1.87G [00:01<00:15, 112MiB/s]  7%|▋         | 139M/1.87G [00:01<00:15, 114MiB/s]  8%|▊         | 151M/1.87G [00:01<00:14, 115MiB/s]  9%|▊         | 162M/1.87G [00:01<00:14, 115MiB/s]  9%|▉         | 174M/1.87G [00:01<00:14, 116MiB/s] 10%|▉         | 186M/1.87G [00:02<00:15, 106MiB/s] 11%|█         | 200M/1.87G [00:02<00:14, 116MiB/s] 11%|█▏        | 212M/1.87G [00:02<00:15, 108MiB/s] 12%|█▏        | 225M/1.87G [00:02<00:15, 108MiB/s] 13%|█▎        | 239M/1.87G [00:02<00:13, 117MiB/s] 13%|█▎        | 251M/1.87G [00:02<00:14, 113MiB/s] 14%|█▍        | 265M/1.87G [00:02<00:14, 112MiB/s] 15%|█▍        | 280M/1.87G [00:02<00:13, 120MiB/s] 16%|█▌        | 292M/1.87G [00:02<00:13, 115MiB/s] 16%|█▋        | 305M/1.87G [00:03<00:13, 112MiB/s] 17%|█▋        | 319M/1.87G [00:03<00:12, 120MiB/s] 18%|█▊        | 331M/1.87G [00:03<00:13, 116MiB/s] 18%|█▊        | 345M/1.87G [00:03<00:13, 113MiB/s] 19%|█▉        | 359M/1.87G [00:03<00:12, 121MiB/s] 20%|█▉        | 371M/1.87G [00:03<00:12, 116MiB/s] 21%|██        | 385M/1.87G [00:03<00:13, 113MiB/s] 21%|██▏       | 399M/1.87G [00:03<00:12, 122MiB/s] 22%|██▏       | 411M/1.87G [00:04<00:12, 116MiB/s] 23%|██▎       | 424M/1.87G [00:04<00:12, 113MiB/s] 23%|██▎       | 439M/1.87G [00:04<00:11, 122MiB/s] 24%|██▍       | 451M/1.87G [00:04<00:12, 116MiB/s] 25%|██▍       | 464M/1.87G [00:04<00:12, 113MiB/s] 26%|██▌       | 478M/1.87G [00:04<00:11, 120MiB/s] 26%|██▋       | 491M/1.87G [00:04<00:11, 116MiB/s] 27%|██▋       | 504M/1.87G [00:04<00:11, 116MiB/s] 28%|██▊       | 519M/1.87G [00:04<00:10, 124MiB/s] 28%|██▊       | 531M/1.87G [00:05<00:11, 118MiB/s] 29%|██▉       | 544M/1.87G [00:05<00:11, 114MiB/s] 30%|██▉       | 558M/1.87G [00:05<00:10, 121MiB/s] 31%|███       | 571M/1.87G [00:05<00:11, 116MiB/s] 31%|███▏      | 584M/1.87G [00:05<00:11, 114MiB/s] 32%|███▏      | 598M/1.87G [00:05<00:10, 120MiB/s] 33%|███▎      | 610M/1.87G [00:05<00:10, 117MiB/s] 33%|███▎      | 625M/1.87G [00:05<00:09, 125MiB/s] 34%|███▍      | 637M/1.87G [00:05<00:10, 118MiB/s] 35%|███▍      | 649M/1.87G [00:06<00:10, 114MiB/s] 36%|███▌      | 664M/1.87G [00:06<00:09, 122MiB/s] 36%|███▌      | 676M/1.87G [00:06<00:10, 117MiB/s] 37%|███▋      | 688M/1.87G [00:06<00:10, 111MiB/s] 38%|███▊      | 702M/1.87G [00:06<00:09, 120MiB/s] 38%|███▊      | 714M/1.87G [00:06<00:09, 117MiB/s] 39%|███▉      | 726M/1.87G [00:06<00:10, 112MiB/s] 40%|███▉      | 740M/1.87G [00:06<00:09, 119MiB/s] 40%|████      | 752M/1.87G [00:06<00:09, 117MiB/s] 41%|████      | 764M/1.87G [00:07<00:09, 112MiB/s] 42%|████▏     | 778M/1.87G [00:07<00:09, 121MiB/s] 42%|████▏     | 791M/1.87G [00:07<00:09, 116MiB/s] 43%|████▎     | 804M/1.87G [00:07<00:09, 113MiB/s] 44%|████▍     | 818M/1.87G [00:07<00:08, 121MiB/s] 44%|████▍     | 831M/1.87G [00:07<00:09, 115MiB/s] 45%|████▌     | 844M/1.87G [00:07<00:09, 114MiB/s] 46%|████▌     | 858M/1.87G [00:07<00:08, 122MiB/s] 47%|████▋     | 871M/1.87G [00:07<00:08, 116MiB/s] 47%|████▋     | 883M/1.87G [00:08<00:08, 113MiB/s] 48%|████▊     | 897M/1.87G [00:08<00:08, 121MiB/s] 49%|████▊     | 910M/1.87G [00:08<00:08, 116MiB/s] 49%|████▉     | 923M/1.87G [00:08<00:08, 113MiB/s] 50%|█████     | 938M/1.87G [00:08<00:07, 121MiB/s] 51%|█████     | 950M/1.87G [00:08<00:07, 116MiB/s] 52%|█████▏    | 963M/1.87G [00:08<00:07, 113MiB/s] 52%|█████▏    | 977M/1.87G [00:08<00:07, 120MiB/s] 53%|█████▎    | 989M/1.87G [00:08<00:07, 116MiB/s] 54%|█████▎    | 1.00G/1.87G [00:09<00:07, 114MiB/s] 54%|█████▍    | 1.02G/1.87G [00:09<00:07, 121MiB/s] 55%|█████▌    | 1.03G/1.87G [00:09<00:07, 116MiB/s] 56%|█████▌    | 1.04G/1.87G [00:09<00:07, 113MiB/s] 57%|█████▋    | 1.06G/1.87G [00:09<00:06, 122MiB/s] 57%|█████▋    | 1.07G/1.87G [00:09<00:06, 117MiB/s] 58%|█████▊    | 1.08G/1.87G [00:09<00:06, 113MiB/s] 59%|█████▉    | 1.10G/1.87G [00:09<00:06, 122MiB/s] 59%|█████▉    | 1.11G/1.87G [00:09<00:06, 116MiB/s] 60%|██████    | 1.12G/1.87G [00:10<00:06, 113MiB/s] 61%|██████    | 1.14G/1.87G [00:10<00:06, 122MiB/s] 62%|██████▏   | 1.15G/1.87G [00:10<00:06, 116MiB/s] 62%|██████▏   | 1.16G/1.87G [00:10<00:06, 113MiB/s] 63%|██████▎   | 1.18G/1.87G [00:10<00:05, 121MiB/s] 64%|██████▎   | 1.19G/1.87G [00:10<00:05, 116MiB/s] 64%|██████▍   | 1.20G/1.87G [00:10<00:05, 113MiB/s] 65%|██████▌   | 1.22G/1.87G [00:10<00:05, 122MiB/s] 66%|██████▌   | 1.23G/1.87G [00:11<00:08, 73.3MiB/s] 66%|██████▋   | 1.24G/1.87G [00:11<00:07, 83.3MiB/s] 67%|██████▋   | 1.25G/1.87G [00:11<00:06, 90.5MiB/s] 68%|██████▊   | 1.27G/1.87G [00:11<00:06, 96.7MiB/s] 68%|██████▊   | 1.28G/1.87G [00:11<00:06, 94.6MiB/s] 69%|██████▉   | 1.29G/1.87G [00:11<00:05, 97.8MiB/s] 70%|██████▉   | 1.30G/1.87G [00:11<00:05, 110MiB/s]  70%|███████   | 1.31G/1.87G [00:11<00:05, 107MiB/s] 71%|███████   | 1.33G/1.87G [00:12<00:04, 118MiB/s] 72%|███████▏  | 1.34G/1.87G [00:12<00:04, 113MiB/s] 72%|███████▏  | 1.35G/1.87G [00:12<00:04, 110MiB/s] 73%|███████▎  | 1.37G/1.87G [00:12<00:04, 118MiB/s] 74%|███████▍  | 1.38G/1.87G [00:12<00:04, 114MiB/s] 74%|███████▍  | 1.39G/1.87G [00:12<00:04, 111MiB/s] 75%|███████▌  | 1.41G/1.87G [00:12<00:03, 120MiB/s] 76%|███████▌  | 1.42G/1.87G [00:12<00:03, 115MiB/s] 77%|███████▋  | 1.43G/1.87G [00:12<00:03, 112MiB/s] 77%|███████▋  | 1.45G/1.87G [00:13<00:03, 120MiB/s] 78%|███████▊  | 1.46G/1.87G [00:13<00:03, 116MiB/s] 79%|███████▉  | 1.47G/1.87G [00:13<00:03, 124MiB/s] 79%|███████▉  | 1.48G/1.87G [00:13<00:03, 117MiB/s] 80%|████████  | 1.50G/1.87G [00:13<00:03, 112MiB/s] 81%|████████  | 1.51G/1.87G [00:13<00:02, 121MiB/s] 82%|████████▏ | 1.52G/1.87G [00:13<00:02, 116MiB/s] 82%|████████▏ | 1.53G/1.87G [00:13<00:02, 112MiB/s] 83%|████████▎ | 1.55G/1.87G [00:13<00:02, 121MiB/s] 84%|████████▎ | 1.56G/1.87G [00:14<00:02, 116MiB/s] 84%|████████▍ | 1.57G/1.87G [00:14<00:02, 119MiB/s] 85%|████████▍ | 1.59G/1.87G [00:14<00:02, 118MiB/s] 86%|████████▌ | 1.60G/1.87G [00:14<00:02, 111MiB/s] 86%|████████▋ | 1.61G/1.87G [00:14<00:02, 120MiB/s] 87%|████████▋ | 1.63G/1.87G [00:14<00:02, 116MiB/s] 88%|████████▊ | 1.64G/1.87G [00:14<00:02, 111MiB/s] 88%|████████▊ | 1.65G/1.87G [00:14<00:01, 116MiB/s] 89%|████████▉ | 1.66G/1.87G [00:14<00:01, 116MiB/s] 90%|████████▉ | 1.68G/1.87G [00:15<00:01, 125MiB/s] 90%|█████████ | 1.69G/1.87G [00:15<00:01, 117MiB/s] 91%|█████████ | 1.70G/1.87G [00:15<00:01, 113MiB/s] 92%|█████████▏| 1.71G/1.87G [00:15<00:01, 122MiB/s] 92%|█████████▏| 1.73G/1.87G [00:15<00:01, 116MiB/s] 93%|█████████▎| 1.74G/1.87G [00:15<00:01, 112MiB/s] 94%|█████████▍| 1.75G/1.87G [00:15<00:00, 121MiB/s] 95%|█████████▍| 1.77G/1.87G [00:15<00:00, 115MiB/s] 95%|█████████▌| 1.78G/1.87G [00:15<00:00, 123MiB/s] 96%|█████████▌| 1.79G/1.87G [00:16<00:00, 116MiB/s] 97%|█████████▋| 1.80G/1.87G [00:16<00:00, 113MiB/s] 97%|█████████▋| 1.82G/1.87G [00:16<00:00, 122MiB/s] 98%|█████████▊| 1.83G/1.87G [00:16<00:00, 116MiB/s] 99%|█████████▊| 1.84G/1.87G [00:16<00:00, 112MiB/s] 99%|█████████▉| 1.86G/1.87G [00:16<00:00, 117MiB/s]
+0.00iB [00:00, ?iB/s][A100%|██████████| 1.87G/1.87G [00:17<00:00, 106MiB/s]
+0.00iB [00:00, ?iB/s]4.37kiB [00:00, 4.69kiB/s]
+
+  0%|          | 0.00/32.0 [00:00<?, ?iB/s][A361kiB [00:00, 376kiB/s]
+  0%|          | 0.00/7.75M [00:00<?, ?iB/s]100%|██████████| 32.0/32.0 [00:00<00:00, 33.0iB/s]
+  6%|▋         | 487k/7.75M [00:00<00:01, 4.87MiB/s] 28%|██▊       | 2.16M/7.75M [00:00<00:00, 11.9MiB/s]100%|█████████▉| 7.74M/7.75M [00:00<00:00, 31.9MiB/s]/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/transformers/utils/hub.py:110: FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
+  warnings.warn(
+Traceback (most recent call last):
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/xtts-server/engines/xtts_engine.py", line 298, in load_model
+    self.tts_model = TTS(
+                     ^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/api.py", line 74, in __init__
+    self.load_tts_model_by_name(model_name, gpu)
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/api.py", line 177, in load_tts_model_by_name
+    self.synthesizer = Synthesizer(
+                       ^^^^^^^^^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/utils/synthesizer.py", line 109, in __init__
+    self._load_tts_from_dir(model_dir, use_cuda)
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/utils/synthesizer.py", line 161, in _load_tts_from_dir
+    config = load_config(os.path.join(model_dir, "config.json"))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/config/__init__.py", line 97, in load_config
+    config_class = register_config(model_name.lower())
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/config/__init__.py", line 40, in register_config
+    from TTS.tts.configs.xtts_config import XttsConfig
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/tts/configs/xtts_config.py", line 5, in <module>
+    from TTS.tts.models.xtts import XttsArgs, XttsAudioConfig
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/tts/models/xtts.py", line 12, in <module>
+    from TTS.tts.layers.xtts.stream_generator import init_stream_support
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/tts/layers/xtts/stream_generator.py", line 13, in <module>
+    from transformers import (
+ImportError: cannot import name 'BeamSearchScorer' from 'transformers' (/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/transformers/__init__.py)
+Traceback (most recent call last):
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/xtts-server/main.py", line 575, in initialize_tts_model
+    tts_engine = get_active_engine("xtts-v2")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/xtts-server/main.py", line 537, in get_active_engine
+    engine.load_model()
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/xtts-server/engines/xtts_engine.py", line 298, in load_model
+    self.tts_model = TTS(
+                     ^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/api.py", line 74, in __init__
+    self.load_tts_model_by_name(model_name, gpu)
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/api.py", line 177, in load_tts_model_by_name
+    self.synthesizer = Synthesizer(
+                       ^^^^^^^^^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/utils/synthesizer.py", line 109, in __init__
+    self._load_tts_from_dir(model_dir, use_cuda)
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/utils/synthesizer.py", line 161, in _load_tts_from_dir
+    config = load_config(os.path.join(model_dir, "config.json"))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/config/__init__.py", line 97, in load_config
+    config_class = register_config(model_name.lower())
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/config/__init__.py", line 40, in register_config
+    from TTS.tts.configs.xtts_config import XttsConfig
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/tts/configs/xtts_config.py", line 5, in <module>
+    from TTS.tts.models.xtts import XttsArgs, XttsAudioConfig
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/tts/models/xtts.py", line 12, in <module>
+    from TTS.tts.layers.xtts.stream_generator import init_stream_support
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/tts/layers/xtts/stream_generator.py", line 13, in <module>
+    from transformers import (
+ImportError: cannot import name 'BeamSearchScorer' from 'transformers' (/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/transformers/__init__.py)
+Traceback (most recent call last):
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/xtts-server/main.py", line 614, in startup_event
+    tts_model = initialize_tts_model("tts_models/multilingual/multi-dataset/xtts_v2")
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/xtts-server/main.py", line 575, in initialize_tts_model
+    tts_engine = get_active_engine("xtts-v2")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/xtts-server/main.py", line 537, in get_active_engine
+    engine.load_model()
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/xtts-server/engines/xtts_engine.py", line 298, in load_model
+    self.tts_model = TTS(
+                     ^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/api.py", line 74, in __init__
+    self.load_tts_model_by_name(model_name, gpu)
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/api.py", line 177, in load_tts_model_by_name
+    self.synthesizer = Synthesizer(
+                       ^^^^^^^^^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/utils/synthesizer.py", line 109, in __init__
+    self._load_tts_from_dir(model_dir, use_cuda)
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/utils/synthesizer.py", line 161, in _load_tts_from_dir
+    config = load_config(os.path.join(model_dir, "config.json"))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/config/__init__.py", line 97, in load_config
+    config_class = register_config(model_name.lower())
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/config/__init__.py", line 40, in register_config
+    from TTS.tts.configs.xtts_config import XttsConfig
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/tts/configs/xtts_config.py", line 5, in <module>
+    from TTS.tts.models.xtts import XttsArgs, XttsAudioConfig
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/tts/models/xtts.py", line 12, in <module>
+    from TTS.tts.layers.xtts.stream_generator import init_stream_support
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/tts/layers/xtts/stream_generator.py", line 13, in <module>
+    from transformers import (
+ImportError: cannot import name 'BeamSearchScorer' from 'transformers' (/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/transformers/__init__.py)
+ERROR:    Traceback (most recent call last):
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/starlette/routing.py", line 694, in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/starlette/routing.py", line 571, in __aenter__
+    await self._router.startup()
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/starlette/routing.py", line 671, in startup
+    await handler()
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/xtts-server/main.py", line 614, in startup_event
+    tts_model = initialize_tts_model("tts_models/multilingual/multi-dataset/xtts_v2")
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/xtts-server/main.py", line 575, in initialize_tts_model
+    tts_engine = get_active_engine("xtts-v2")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/xtts-server/main.py", line 537, in get_active_engine
+    engine.load_model()
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/xtts-server/engines/xtts_engine.py", line 298, in load_model
+    self.tts_model = TTS(
+                     ^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/api.py", line 74, in __init__
+    self.load_tts_model_by_name(model_name, gpu)
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/api.py", line 177, in load_tts_model_by_name
+    self.synthesizer = Synthesizer(
+                       ^^^^^^^^^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/utils/synthesizer.py", line 109, in __init__
+    self._load_tts_from_dir(model_dir, use_cuda)
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/utils/synthesizer.py", line 161, in _load_tts_from_dir
+    config = load_config(os.path.join(model_dir, "config.json"))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/config/__init__.py", line 97, in load_config
+    config_class = register_config(model_name.lower())
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/config/__init__.py", line 40, in register_config
+    from TTS.tts.configs.xtts_config import XttsConfig
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/tts/configs/xtts_config.py", line 5, in <module>
+    from TTS.tts.models.xtts import XttsArgs, XttsAudioConfig
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/tts/models/xtts.py", line 12, in <module>
+    from TTS.tts.layers.xtts.stream_generator import init_stream_support
+  File "/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/TTS/tts/layers/xtts/stream_generator.py", line 13, in <module>
+    from transformers import (
+ImportError: cannot import name 'BeamSearchScorer' from 'transformers' (/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/transformers/__init__.py)
+
+ERROR:    Application startup failed. Exiting.
+ > Model's license - CPML
+ > Check https://coqui.ai/cpml.txt for more info.
+❌ Erro ao carregar XTTS v2: cannot import name 'BeamSearchScorer' from 'transformers' (/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/transformers/__init__.py)
+❌ Erro ao inicializar TTS Engine: cannot import name 'BeamSearchScorer' from 'transformers' (/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/transformers/__init__.py)
+❌ Startup error: cannot import name 'BeamSearchScorer' from 'transformers' (/home/labubu/Documentos/GitHub/TTS-Voice-generator-twitch-capable/venv/lib/python3.11/site-packages/transformers/__init__.py)
+[0;31m✗ Servidor finalizado com erro: 3[0m
+
+[0;31m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;31mERRO EM: Inicialização do Servidor[0m
+[0;31mMensagem: Falha na execução de Inicialização do Servidor[0m
+[0;31m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[1;33m[DAEMON] Pulando erro e continuando...[0m
+[1;33m[!] Pulando Inicialização do Servidor...[0m
+
+[0;34m════════════════════════════════════════════════════════════════════[0m
+[0;32m✓ Setup Completo![0m
+[0;34m════════════════════════════════════════════════════════════════════[0m
+
+[0;36mPara próximas vezes, ative o ambiente com:[0m
+  [1;33msource venv/bin/activate[0m
+

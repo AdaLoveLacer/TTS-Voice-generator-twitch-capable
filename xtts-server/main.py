@@ -9,11 +9,55 @@ import os
 import io
 import sys
 
+# ============================================================================
+# AUTO-ACCEPT COQUI LICENSE FOR AUTOMATION
+# ============================================================================
+# Quando rodando em modo daemon/automation, aceitar automaticamente a licença
+if os.environ.get('XTTS_AUTO_LICENSE') == '1' or not sys.stdin.isatty():
+    # Monkeypatch input() para aceitar automaticamente perguntas sobre licença
+    original_input = __builtins__.input
+    def auto_input(prompt=''):
+        if 'commercial license' in prompt.lower() or 'cpml' in prompt.lower() or '[y/n]' in prompt:
+            print(prompt + 'y')  # Auto-respond with 'y'
+            return 'y'
+        return original_input(prompt)
+    __builtins__.input = auto_input
+
 # Force UTF-8 encoding for stdout/stderr
 if sys.stdout.encoding != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 if sys.stderr.encoding != 'utf-8':
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
+# ============================================================================
+# IMPORTAR TORCH ANTES DE TUDO PARA MONKEYPATCH
+# ============================================================================
+import torch
+import torch.serialization
+
+# Monkeypatch torch.load IMEDIATAMENTE após importar torch
+original_torch_load = torch.load
+
+def patched_torch_load(f, *args, **kwargs):
+    """Patched torch.load que desabilita weights_only para compatibilidade com TTS"""
+    kwargs['weights_only'] = False
+    return original_torch_load(f, *args, **kwargs)
+
+torch.load = patched_torch_load
+
+# ============================================================================
+# AGORA IMPORTAR TTS (QUE USA torch.load)
+# ============================================================================
+try:
+    from TTS.api import TTS  # type: ignore
+except ImportError as e:
+    print(f"❌ ERRO: Módulo TTS não encontrado! {e}")
+    print("Execute: pip install TTS")
+    sys.exit(1)
+
+# ============================================================================
+# IMPORTS RESTANTES
+# ============================================================================
 import json
 import shutil
 import tempfile
@@ -22,6 +66,8 @@ import numpy as np
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 from datetime import datetime
+import traceback
+import scipy.io.wavfile as wavfile
 
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form, BackgroundTasks, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
@@ -30,39 +76,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 from pydantic import BaseModel
 import uvicorn
-import sys
-import torch
-import torch.serialization
-import traceback
-import scipy.io.wavfile as wavfile
-
-try:
-    # Monkeypatch torch.load to disable weights_only check for TTS models
-    # PyTorch 2.6+ defaults to weights_only=True which breaks TTS compatibility
-    original_torch_load = torch.load
-    
-    def patched_torch_load(f, *args, **kwargs):
-        """Patched torch.load that disables weights_only for TTS compatibility"""
-        # Always use weights_only=False to allow TTS model loading
-        kwargs['weights_only'] = False
-        return original_torch_load(f, *args, **kwargs)
-    
-    # Apply monkeypatch before importing TTS
-    torch.load = patched_torch_load
-    
-    from TTS.api import TTS  # type: ignore
-    
-except ImportError:
-    print("❌ ERRO: Módulo TTS não encontrado!")
-    print("Execute: pip install TTS")
-    sys.exit(1)
-
-try:
-    import torch
-    import torchaudio
-except ImportError as e:
-    print(f"❌ ERRO: Módulos PyTorch não encontrados: {e}")
-    sys.exit(1)
+import torchaudio
 
 try:
     from voice_manager import VoiceManager
@@ -73,7 +87,12 @@ except ImportError as e:
     sys.exit(1)
 
 try:
-    from engines import XTTSEngine, StyleTTS2Engine, EngineRegistry
+    from engines import XTTSEngine, EngineRegistry
+    # Tentar importar StyleTTS2Engine opcionalmente
+    try:
+        from engines import StyleTTS2Engine
+    except ImportError:
+        StyleTTS2Engine = None
 except ImportError as e:
     print(f"❌ ERRO: Engines module não encontrado: {e}")
     traceback.print_exc()
@@ -86,8 +105,11 @@ except ImportError as e:
 # Available TTS Engines - registry maps engine names to classes
 ENGINES = {
     "xtts-v2": XTTSEngine,
-    "stylets2": StyleTTS2Engine,
 }
+
+# Adicionar StyleTTS2 se disponível
+if StyleTTS2Engine is not None:
+    ENGINES["stylets2"] = StyleTTS2Engine
 
 # Default engine (can be overridden via request parameter)
 DEFAULT_ENGINE = "xtts-v2"

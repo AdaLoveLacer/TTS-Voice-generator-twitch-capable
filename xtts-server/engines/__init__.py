@@ -10,12 +10,21 @@ Motores TTS disponíveis:
 
 from .base_engine import BaseTTSEngine, EngineRegistry, register_engine
 from .xtts_engine import XTTSEngine
-from .stylets2_engine import StyleTTS2Engine
+
+# Tentar importar StyleTTS2Engine, mas não falhar se styletts2 não estiver disponível
+try:
+    from .stylets2_engine import StyleTTS2Engine
+except ImportError as e:
+    print(f"⚠ StyleTTS2 não disponível: {e}")
+    StyleTTS2Engine = None
 
 __all__ = [
     "BaseTTSEngine",
     "EngineRegistry",
     "register_engine",
     "XTTSEngine",
-    "StyleTTS2Engine",
 ]
+
+if StyleTTS2Engine is not None:
+    __all__.append("StyleTTS2Engine")
+

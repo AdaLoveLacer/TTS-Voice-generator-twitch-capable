@@ -1,0 +1,47 @@
+# Requirements para XTTS Server - Linux
+# Otimizado para Python 3.11 em CachyOS e outras distribuições
+# Apenas dependências essenciais e compatíveis
+
+--index-url https://pypi.org/simple/
+--extra-index-url https://download.pytorch.org/whl/cu118
+
+# ========================================
+# Core Dependencies
+# ========================================
+numpy==1.24.3
+librosa>=0.10.0
+soundfile>=0.12.0
+gtts>=2.3.0
+sounddevice>=0.4.5
+TTS>=0.21.0  # Síntese de fala - compatível com Python 3.11
+styletts2>=0.1.6  # StyleTTS2 engine support (versão máxima disponível)
+
+# ========================================
+# PyTorch - CUDA 11.8
+# ========================================
+torch==2.0.0+cu118
+torchaudio==2.0.0+cu118
+
+# ========================================
+# FastAPI Web Server
+# ========================================
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+pydantic>=2.0.0
+
+# ========================================
+# ML/Audio Utilities & Dependencies
+# ========================================
+transformers>=4.35.0,<4.45.0  # TTS precisa desta versão (compatível com BeamSearchScorer)
+rich>=13.0.0
+av>=11.0.0
+scipy>=1.9.0,<1.13
+scikit-learn>=1.1.0
+requests>=2.28.0
+
+# ========================================
+# Additional Utilities
+# ========================================
+python-dotenv>=0.19.0
+click>=8.0.0

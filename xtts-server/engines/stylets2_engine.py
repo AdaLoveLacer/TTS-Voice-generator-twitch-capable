@@ -33,18 +33,22 @@ if sys.stderr.encoding != 'utf-8':
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 # Try to import StyleTTS2
+STYLETTS2_AVAILABLE = False
 try:
     from styletts2 import tts
+    STYLETTS2_AVAILABLE = True
 except ImportError as e:
-    print(f"❌ ERRO: StyleTTS2 não encontrado: {e}")
-    print("   Execute: pip install styletts2")
-    sys.exit(1)
+    print(f"⚠ StyleTTS2 não encontrado: {e}")
+    print("   StyleTTS2 é opcional. Use: pip install styletts2")
+    tts = None
 
 try:
     import torchaudio
 except ImportError as e:
-    print(f"❌ ERRO: torchaudio não encontrado: {e}")
-    sys.exit(1)
+    if STYLETTS2_AVAILABLE:
+        print(f"❌ ERRO: torchaudio não encontrado: {e}")
+        sys.exit(1)
+    torchaudio = None
 
 from engines.base_engine import BaseTTSEngine, register_engine
 
@@ -252,18 +256,19 @@ def apply_speed_adjustment(wav_data, speed_factor: float):
 # STYLETTS2 ENGINE CLASS
 # ============================================================================
 
-@register_engine("stylets2")
-class StyleTTS2Engine(BaseTTSEngine):
-    """
-    StyleTTS2 Engine para síntese rápida com clonagem de voz.
-    
-    Características:
-    - 2-3x mais rápido que XTTS v2
-    - Qualidade human-level
-    - Voice cloning zero-shot
-    - Multilíngue (11 idiomas)
-    - Apenas 2GB VRAM necessário
-    """
+if STYLETTS2_AVAILABLE:
+    @register_engine("stylets2")
+    class StyleTTS2Engine(BaseTTSEngine):
+        """
+        StyleTTS2 Engine para síntese rápida com clonagem de voz.
+        
+        Características:
+        - 2-3x mais rápido que XTTS v2
+        - Qualidade human-level
+        - Voice cloning zero-shot
+        - Multilíngue (11 idiomas)
+        - Apenas 2GB VRAM necessário
+        """
     
     def __init__(self, device: str = None):
         """
@@ -475,24 +480,28 @@ class StyleTTS2Engine(BaseTTSEngine):
         return True
 
 
-# ============================================================================
-# BACKWARD COMPATIBILITY FUNCTIONS
-# ============================================================================
+    # ============================================================================
+    # BACKWARD COMPATIBILITY FUNCTIONS
+    # ============================================================================
 
-def get_styletts2_engine() -> StyleTTS2Engine:
-    """Helper para obter instância do StyleTTS2 Engine."""
-    engine = StyleTTS2Engine()
-    engine.load_model()
-    return engine
+    def get_styletts2_engine() -> StyleTTS2Engine:
+        """Helper para obter instância do StyleTTS2 Engine."""
+        engine = StyleTTS2Engine()
+        engine.load_model()
+        return engine
 
 
 __all__ = [
-    "StyleTTS2Engine",
     "SAMPLE_RATE",
     "LANGUAGE_SUPPORT",
     "INFERENCE_CONFIG",
     "CACHE_DIR",
     "normalize_audio_file",
     "apply_speed_adjustment",
-    "get_styletts2_engine",
 ]
+
+if STYLETTS2_AVAILABLE:
+    __all__.extend([
+        "StyleTTS2Engine",
+        "get_styletts2_engine",
+    ])
