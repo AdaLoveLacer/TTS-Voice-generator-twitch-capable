@@ -858,10 +858,9 @@
                 <div id="tts-status" class="status"></div>
                 
                 <div id="tts-output" class="audio-player" style="display: none;">
-                    <strong>Resultado:</strong>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <audio id="tts-audio" controls style="flex: 1; cursor: pointer;"></audio>
-                        <button id="tts-download" type="button" style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9em; white-space: nowrap;" onclick="downloadAudio('tts-audio', 'tts-synthese.wav')">📥 Download</button>
+                    <strong>Resultados:</strong>
+                    <div id="tts-history" style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding: 10px 0;">
+                        <!-- Audio items will be added here -->
                     </div>
                 </div>
             </div>
@@ -1143,10 +1142,9 @@
                 <div id="clone-status" class="status"></div>
                 
                 <div id="clone-output" class="audio-player" style="display: none;">
-                    <strong>Resultado:</strong>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <audio id="clone-audio" controls style="flex: 1; cursor: pointer;"></audio>
-                        <button id="clone-download" type="button" style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9em; white-space: nowrap;" onclick="downloadAudio('clone-audio', 'clone-voz.wav')">📥 Download</button>
+                    <strong>Resultados da Clonagem:</strong>
+                    <div id="clone-history" style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding: 10px 0;">
+                        <!-- Audio items will be added here -->
                     </div>
                 </div>
             </div>
@@ -1826,9 +1824,52 @@ GET /v1/info
                 if (response.ok) {
                     const blob = await response.blob();
                     const url = URL.createObjectURL(blob);
-                    document.getElementById('tts-audio').src = url;
+                    
+                    // Get or create the history container
+                    const historyContainer = document.getElementById('tts-history');
+                    
+                    // Count current audio items
+                    const audioItems = historyContainer.querySelectorAll('.audio-item');
+                    
+                    // Remove oldest item if we have 10 or more
+                    if (audioItems.length >= 10) {
+                        audioItems[0].remove();
+                    }
+                    
+                    // Create new audio item
+                    const audioItem = document.createElement('div');
+                    audioItem.className = 'audio-item';
+                    audioItem.style.cssText = 'display: flex; gap: 10px; align-items: center; padding: 10px; background: rgba(102, 126, 234, 0.1); border-radius: 5px; border-left: 3px solid #667eea;';
+                    
+                    const timestamp = new Date().toLocaleTimeString('pt-BR');
+                    const audioId = `tts-audio-${Date.now()}`;
+                    
+                    audioItem.innerHTML = `
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-size: 0.8em; color: #999; margin-bottom: 5px;">
+                                ${timestamp} | ${engine} | ${language}
+                            </div>
+                            <audio id="${audioId}" controls style="width: 100%; cursor: pointer;"></audio>
+                        </div>
+                        <button type="button" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.85em; white-space: nowrap;" onclick="downloadAudio('${audioId}', 'tts-${timestamp.replace(/[/:]/g, '-')}.wav')">📥</button>
+                    `;
+                    
+                    // Add to container
+                    historyContainer.appendChild(audioItem);
+                    
+                    // Set audio source
+                    document.getElementById(audioId).src = url;
+                    
+                    // Show output container
                     document.getElementById('tts-output').style.display = 'block';
+                    
+                    // Auto-scroll to bottom
+                    historyContainer.scrollTop = historyContainer.scrollHeight;
+                    
                     showStatus('tts-status', '✅ Síntese concluída com sucesso!', 'success');
+                    
+                    // Limpar texto após síntese bem-sucedida (opcional)
+                    // document.getElementById('tts-text').value = '';
                 } else {
                     showStatus('tts-status', `Erro: ${response.status} - ${response.statusText}`, 'error');
                 }
@@ -1899,8 +1940,48 @@ GET /v1/info
                 if (response.ok) {
                     const blob = await response.blob();
                     const url = URL.createObjectURL(blob);
-                    document.getElementById('clone-audio').src = url;
+                    
+                    // Get or create the history container
+                    const historyContainer = document.getElementById('clone-history');
+                    
+                    // Count current audio items
+                    const audioItems = historyContainer.querySelectorAll('.audio-item');
+                    
+                    // Remove oldest item if we have 10 or more
+                    if (audioItems.length >= 10) {
+                        audioItems[0].remove();
+                    }
+                    
+                    // Create new audio item
+                    const audioItem = document.createElement('div');
+                    audioItem.className = 'audio-item';
+                    audioItem.style.cssText = 'display: flex; gap: 10px; align-items: center; padding: 10px; background: rgba(102, 126, 234, 0.1); border-radius: 5px; border-left: 3px solid #667eea;';
+                    
+                    const timestamp = new Date().toLocaleTimeString('pt-BR');
+                    const audioId = `clone-audio-${Date.now()}`;
+                    
+                    audioItem.innerHTML = `
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-size: 0.8em; color: #999; margin-bottom: 5px;">
+                                ${timestamp} | ${engine} | Clone (${wavFiles.length} ref.)
+                            </div>
+                            <audio id="${audioId}" controls style="width: 100%; cursor: pointer;"></audio>
+                        </div>
+                        <button type="button" style="padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.85em; white-space: nowrap;" onclick="downloadAudio('${audioId}', 'clone-${timestamp.replace(/[/:]/g, '-')}.wav')">📥</button>
+                    `;
+                    
+                    // Add to container
+                    historyContainer.appendChild(audioItem);
+                    
+                    // Set audio source
+                    document.getElementById(audioId).src = url;
+                    
+                    // Show output container
                     document.getElementById('clone-output').style.display = 'block';
+                    
+                    // Auto-scroll to bottom
+                    historyContainer.scrollTop = historyContainer.scrollHeight;
+                    
                     showStatus('clone-status', `✅ Clonagem (${wavFiles.length} referência(s)) e síntese concluída!`, 'success');
                 } else {
                     const error = await response.text();

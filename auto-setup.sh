@@ -228,8 +228,29 @@ step_pip() {
 step_dependencies() {
     show_step "4/5 Instalando Dependências"
     
-    if [ ! -f "requirements-linux.txt" ]; then
-        show_error "requirements-linux.txt não encontrado"
+    # Determinar qual requirements usar baseado no ENGINE_TYPE
+    local engine_type="${ENGINE_TYPE:-xtts}"
+    local req_file="requirements-xtts.txt"
+    
+    case "$engine_type" in
+        xtts)
+            req_file="requirements-xtts.txt"
+            echo -e "${CYAN}Engine selecionado: XTTS v2${NC}"
+            ;;
+        styletts2)
+            req_file="requirements-styletts2.txt"
+            echo -e "${CYAN}Engine selecionado: StyleTTS2${NC}"
+            ;;
+        both)
+            req_file="requirements-xtts.txt"
+            echo -e "${CYAN}Engine selecionado: AMBOS (XTTS + StyleTTS2)${NC}"
+            ;;
+    esac
+    
+    echo ""
+    
+    if [ ! -f "$req_file" ] && [ "$engine_type" != "both" ]; then
+        show_error "$req_file não encontrado"
         return 1
     fi
     
@@ -242,35 +263,117 @@ step_dependencies() {
     # Verificar dependências críticas
     echo "Verificando dependências já instaladas..."
     local missing_deps=0
+    local engine_type="${ENGINE_TYPE:-xtts}"
     
-    # Verificar módulos essenciais
-    for module in numpy torch librosa soundfile TTS; do
-        if python -c "import $module" 2>/dev/null; then
-            show_success "✓ $module já instalado"
-        else
-            show_warning "✗ $module não encontrado"
-            ((missing_deps++))
-        fi
-    done
-    
-    # Verificar styletts2 (opcional, não bloqueia se não estiver)
-    if python -c "import styletts2" 2>/dev/null; then
-        show_success "✓ styletts2 já instalado"
-    else
-        show_warning "⚠ styletts2 não encontrado (opcional - servidor ainda funciona)"
-    fi
+    case "$engine_type" in
+        xtts)
+            for module in numpy torch librosa soundfile TTS; do
+                if python -c "import $module" 2>/dev/null; then
+                    show_success "✓ $module já instalado"
+                else
+                    show_warning "✗ $module não encontrado"
+                    ((missing_deps++))
+                fi
+            done
+            ;;
+        styletts2)
+            for module in numpy torch librosa soundfile styletts2; do
+                if python -c "import $module" 2>/dev/null; then
+                    show_success "✓ $module já instalado"
+                else
+                    show_warning "✗ $module não encontrado"
+                    ((missing_deps++))
+                fi
+            done
+            ;;
+        both)
+            for module in numpy torch librosa soundfile TTS styletts2; do
+                if python -c "import $module" 2>/dev/null; then
+                    show_success "✓ $module já instalado"
+                else
+                    show_warning "✗ $module não encontrado"
+                    ((missing_deps++))
+                fi
+            done
+            ;;
+    esac
     
     # Se há dependências faltando, instalar
     if [ $missing_deps -gt 0 ]; then
         echo ""
         echo "Instalando dependências faltantes..."
-        echo "Instalando pacotes principais..."
-        python -m pip install -q -r requirements-linux.txt 2>&1 | tail -5 || {
-            show_warning "Erro ao instalar requirements, tentando sem torch específico..."
-            # Tentar instalar sem versão específica de torch
-            python -m pip install -q torch torchaudio 2>&1 | tail -3 || true
-            python -m pip install -q TTS librosa soundfile numpy 2>&1 | tail -3 || true
-        }
+        local engine_type="${ENGINE_TYPE:-xtts}"
+        
+        case "$engine_type" in
+            xtts)
+                echo "Instalando requirements XTTS v2..."
+                python -m pip install -q -r requirements-xtts.txt 2>&1 | tail -5 || {
+                    show_warning "Erro ao instalar requirements-xtts.txt"
+                    python -m pip install -q torch torchaudio 2>&1 | tail -3 || true
+                    python -m pip install -q TTS librosa soundfile numpy 2>&1 | tail -3 || true
+                }
+                ;;
+            styletts2)
+                echo "Instalando requirements StyleTTS2..."
+                python -m pip install -q -r requirements-styletts2.txt 2>&1 | tail -5 || {
+                    show_warning "Erro ao instalar requirements-styletts2.txt"
+                    python -m pip install -q torch torchaudio 2>&1 | tail -3 || true
+                    python -m pip install -q styletts2 librosa soundfile numpy 2>&1 | tail -3 || true
+                }
+                ;;
+            both)
+                echo "========================================="
+                echo "Instalando AMBOS os engines TTS"
+                echo "========================================="
+                echo ""
+                
+                echo "📦 [1/2] Instalando XTTS v2 no venv principal..."
+                python -m pip install -q -r requirements-xtts.txt 2>&1 | tail -3 || {
+                    show_warning "Erro ao instalar XTTS v2, tentando fallback..."
+                    python -m pip install -q torch torchaudio TTS 2>&1 | tail -2 || true
+                }
+                
+                if python -c "import TTS" 2>/dev/null; then
+                    show_success "✓ XTTS v2 instalado no venv principal"
+                else
+                    show_warning "⚠ XTTS v2 pode ter problemas"
+                fi
+                
+                echo ""
+                echo "📦 [2/2] Criando venv separado para StyleTTS2..."
+                
+                if [ -d "venv-styletts2" ]; then
+                    echo "   (venv-styletts2 já existe, atualizando...)"
+                    venv-styletts2/bin/python -m pip install -q --upgrade pip setuptools wheel 2>&1 | tail -1 || true
+                else
+                    echo "   Criando novo venv..."
+                    python3.11 -m venv venv-styletts2 2>/dev/null || python -m venv venv-styletts2 2>/dev/null || {
+                        show_error "Falha ao criar venv-styletts2"
+                        return 1
+                    }
+                    
+                    echo "   Atualizando pip..."
+                    venv-styletts2/bin/python -m pip install -q --upgrade pip setuptools wheel 2>&1 | tail -1 || true
+                fi
+                
+                echo "   Instalando StyleTTS2 com todas as dependências..."
+                venv-styletts2/bin/python -m pip install -q -r requirements-styletts2.txt 2>&1 | tail -3 || {
+                    show_warning "⚠ Erro ao instalar requirements-styletts2.txt, tentando pacotes individuais..."
+                    venv-styletts2/bin/python -m pip install -q styletts2 TTS librosa soundfile numpy 2>&1 | tail -2 || true
+                }
+                
+                if venv-styletts2/bin/python -c "from styletts2 import tts; import TTS" 2>/dev/null; then
+                    show_success "✓ StyleTTS2 instalado em venv-styletts2"
+                else
+                    show_warning "⚠ StyleTTS2 pode ter problemas"
+                fi
+                
+                echo ""
+                echo "✅ AMBOS os engines estão configurados!"
+                echo "   - XTTS v2: Venv principal (venv)"
+                echo "   - StyleTTS2: venv-styletts2"
+                ;;
+        esac
         
         if [ -f "xtts-server/requirements-linux.txt" ]; then
             echo "Instalando dependências do servidor..."
@@ -281,19 +384,38 @@ step_dependencies() {
         return 0
     fi
     
-    # Garantir que TTS está instalado
-    echo "Verificando módulo TTS..."
-    if ! python -c "import TTS" 2>/dev/null; then
-        echo "Instalando TTS especificamente..."
-        python -m pip install -q "TTS>=0.21.0" 2>&1 | tail -3 || true
-    fi
+    # Verificar instalação por engine
+    local engine_type="${ENGINE_TYPE:-xtts}"
     
-    # Verificar se TTS foi instalado
-    if python -c "import TTS" 2>/dev/null; then
-        show_success "Dependências instaladas (incluindo TTS)"
-    else
-        show_warning "TTS pode não ter sido instalado corretamente"
-    fi
+    case "$engine_type" in
+        xtts)
+            if python -c "import TTS" 2>/dev/null; then
+                show_success "✓ XTTS v2 instalado corretamente"
+            else
+                show_warning "⚠ TTS pode não ter sido instalado corretamente"
+            fi
+            ;;
+        styletts2)
+            if python -c "from styletts2 import tts" 2>/dev/null; then
+                show_success "✓ StyleTTS2 instalado corretamente"
+            else
+                show_warning "⚠ StyleTTS2 pode não ter sido instalado corretamente"
+            fi
+            ;;
+        both)
+            if python -c "import TTS" 2>/dev/null; then
+                show_success "✓ XTTS v2 disponível"
+            else
+                show_warning "⚠ XTTS v2 com problemas"
+            fi
+            
+            if [ -d "venv-styletts2" ] && venv-styletts2/bin/python -c "from styletts2 import tts; import TTS" 2>/dev/null; then
+                show_success "✓ StyleTTS2 disponível em venv-styletts2"
+            else
+                show_warning "⚠ StyleTTS2 pode ter problemas ou não instalado"
+            fi
+            ;;
+    esac
     
     return 0
 }
@@ -309,16 +431,44 @@ step_server() {
     
     # Verificar pré-requisitos
     echo "Verificando pré-requisitos..."
-    if ! python -c "import TTS" 2>/dev/null; then
-        show_error "Módulo TTS não encontrado!"
-        echo "Tentando instalar TTS..."
-        python -m pip install -q "TTS>=0.21.0" 2>&1 | tail -3 || true
-        
-        if ! python -c "import TTS" 2>/dev/null; then
-            show_error "Falha ao instalar TTS"
-            return 1
-        fi
-    fi
+    local engine_type="${ENGINE_TYPE:-xtts}"
+    
+    case "$engine_type" in
+        xtts)
+            if ! python -c "import TTS" 2>/dev/null; then
+                show_error "Módulo TTS não encontrado!"
+                echo "Tentando instalar TTS..."
+                python -m pip install -q "TTS>=0.21.0" 2>&1 | tail -3 || true
+                
+                if ! python -c "import TTS" 2>/dev/null; then
+                    show_error "Falha ao instalar TTS"
+                    return 1
+                fi
+            fi
+            ;;
+        styletts2)
+            if ! python -c "from styletts2 import tts" 2>/dev/null; then
+                show_error "Módulo StyleTTS2 não encontrado!"
+                echo "Tentando instalar StyleTTS2..."
+                python -m pip install -q "styletts2>=0.1.6" 2>&1 | tail -3 || true
+                
+                if ! python -c "from styletts2 import tts" 2>/dev/null; then
+                    show_error "Falha ao instalar StyleTTS2"
+                    return 1
+                fi
+            fi
+            ;;
+        both)
+            if ! python -c "import TTS" 2>/dev/null; then
+                show_warning "⚠ XTTS v2 não encontrado"
+                python -m pip install -q "TTS>=0.21.0" 2>&1 | tail -3 || true
+            fi
+            
+            if [ -d "venv-styletts2" ] && ! venv-styletts2/bin/python -c "from styletts2 import tts" 2>/dev/null; then
+                show_warning "⚠ StyleTTS2 não encontrado em venv-styletts2"
+            fi
+            ;;
+    esac
     show_success "Pré-requisitos OK"
     
     # Verificar se estamos no venv ativado
@@ -334,13 +484,27 @@ step_server() {
     cd xtts-server
     
     echo ""
-    echo -e "${CYAN}Iniciando servidor XTTS...${NC}"
+    local engine_type="${ENGINE_TYPE:-xtts}"
+    case "$engine_type" in
+        xtts)
+            echo -e "${CYAN}Iniciando servidor XTTS v2...${NC}"
+            ;;
+        styletts2)
+            echo -e "${CYAN}Iniciando servidor StyleTTS2...${NC}"
+            ;;
+        both)
+            echo -e "${CYAN}Iniciando servidor com suporte a XTTS v2 + StyleTTS2...${NC}"
+            ;;
+    esac
     echo -e "${YELLOW}(Pressione CTRL+C para parar)${NC}"
     echo ""
     
-    # Executar servidor diretamente com 'y' para confirmar licença Coqui
-    echo "y" | python main.py 2>&1
+    # Executar servidor com stdin redirectionado para /dev/null
+    # Isso evita problema de fechamento de stdin após piped input
+    export XTTS_AUTO_LICENSE=1
+    python main.py </dev/null 2>&1
     local exit_code=$?
+    unset XTTS_AUTO_LICENSE
     
     cd - > /dev/null
     

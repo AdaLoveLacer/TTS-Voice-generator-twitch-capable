@@ -1,0 +1,43 @@
+# ========================================================
+# REQUIREMENTS - StyleTTS2 (Engine Alternativo)
+# ========================================================
+# Dependências específicas para StyleTTS2
+# Compatível com transformers <4.40
+# ========================================================
+
+# Core Deep Learning
+torch>=2.0.0
+torchaudio>=2.0.0
+torchvision>=0.15.0
+
+# StyleTTS2 Engine
+styletts2>=0.1.6
+TTS>=0.21.0
+transformers>=4.30.0,<4.45.0
+gruut>=2.2.3,<2.5.0
+
+# Supporting Libraries
+numpy==1.24.3
+scipy>=1.11.0
+scikit-learn>=1.3.0
+matplotlib>=3.7.0
+
+# Audio Processing
+librosa>=0.10.0
+soundfile>=0.12.0
+pydub>=0.25.1
+resampy>=0.4.2
+
+# Web Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.0.0
+python-multipart>=0.0.6
+
+# Utilities
+python-dotenv>=1.0.0
+requests>=2.31.0
+aiofiles>=23.2.0
+
+# Performance
+psutil>=5.9.0

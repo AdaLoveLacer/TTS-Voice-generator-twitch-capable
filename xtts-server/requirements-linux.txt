@@ -14,13 +14,14 @@ soundfile>=0.12.0
 gtts>=2.3.0
 sounddevice>=0.4.5
 TTS>=0.21.0  # Síntese de fala - compatível com Python 3.11
-styletts2>=0.1.6  # StyleTTS2 engine support (versão máxima disponível)
+# NOTA: stylets2 será instalado automaticamente pelo run-auto.sh se disponível
 
 # ========================================
 # PyTorch - CUDA 11.8
 # ========================================
 torch==2.0.0+cu118
 torchaudio==2.0.0+cu118
+torchcodec>=0.1.0  # Necessário para síntese de áudio com XTTS
 
 # ========================================
 # FastAPI Web Server
